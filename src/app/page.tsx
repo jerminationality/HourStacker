@@ -11,7 +11,7 @@ import { Plus, Edit, Trash2, Settings, Hourglass } from "lucide-react";
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { Project } from "@/lib/types";
-import { formatHours, HeaderContext } from "@/lib/utils.tsx";
+import { formatHours, HeaderContext } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,

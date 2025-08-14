@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils.tsx";
+import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState, useMemo } from "react";
