@@ -451,7 +451,7 @@ export default function ProjectPage() {
               </AlertDialogHeader>
               <div className="flex items-center space-x-2 my-4">
                   <Checkbox id="dont-ask-again" checked={dontAskAgain} onCheckedChange={(checked) => setDontAskAgain(checked as boolean)} />
-                  <Label htmlFor="dont-ask-again" className="text-sm font-normal">Don't ask me again</Label>
+                  <Label htmlFor="dont-ask-again" className="text-sm font-normal">Don&apos;t ask me again</Label>
               </div>
               <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>

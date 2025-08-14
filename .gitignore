@@ -46,4 +46,7 @@ firestore-debug.log
 
 # large archives (prevent accidental commits)
 download.zip
+# local bare repo & installer (do not track)
+HourStacker.git.bare/
+OpenJDK21U-jdk_x64_windows_hotspot_21.0.8_9.msi
 *.zip
