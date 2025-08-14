@@ -63,6 +63,7 @@ Service worker (`/sw.js`) is registered in `src/app/layout.tsx`. Manifest & icon
 - Add tests (Vitest / Jest) for utilities & contexts
 - Add CI workflow (GitHub Actions) running `npm run check` + build
 - Implement AI-assisted summaries of shift logs
+- Android Trusted Web Activity packaging (Bubblewrap)
 
 ### Lighthouse PWA Audit Checklist
 Use Chrome DevTools Lighthouse (Progressive Web App category). Aim for green across installability & offline readiness.
@@ -102,6 +103,30 @@ Testing Steps
 4. Toggle offline and reload root to confirm offline fallback.
 
 If a specific Lighthouse audit fails, note the audit ID and adjust either `manifest.json`, `sw.js`, or markup accordingly. Ask for help if you want automated CI Lighthouse checks.
+
+### Android Trusted Web Activity (TWA)
+This project is PWA-ready. To wrap it as an Android app using a Trusted Web Activity:
+
+1. Deploy the site over HTTPS at your production domain.
+2. Ensure `manifest.json` includes scope, start_url, display standalone, theme/background colors, icons, and maskable icon (already configured; replace maskable icon with a real adaptive asset later).
+3. Generate a signing key (if not using Bubblewrap interactive setup):
+	```bash
+	keytool -genkey -v -keystore hourstacker.keystore -alias hourstacker -keyalg RSA -keysize 2048 -validity 10000
+	keytool -list -v -keystore hourstacker.keystore -alias hourstacker | findstr SHA256
+	```
+4. Update `public/.well-known/assetlinks.json` replacing `REPLACE_WITH_SHA256_FINGERPRINT` with the SHA256 fingerprint.
+5. Install Bubblewrap and initialize:
+	```bash
+	npm install -g @bubblewrap/cli
+	bubblewrap init --manifest=https://your-domain/manifest.json
+	bubblewrap build --bundle  # produces .aab for Play Store
+	```
+6. Upload the generated AAB to Google Play Console (create listing, set package name `com.hourstacker.app`).
+7. When updating, increment versionCode/versionName via `bubblewrap update` or Android project files, rebuild, and upload again.
+
+Placeholder to replace: `REPLACE_WITH_SHA256_FINGERPRINT` in `assetlinks.json`.
+
+If the app shows a 3‑dot menu (custom tabs UI), asset links are not validated—double-check fingerprint and domain serving correct JSON with `Content-Type: application/json`.
 
 ### License
 Add a license file if distributing.
