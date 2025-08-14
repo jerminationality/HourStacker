@@ -58,6 +58,17 @@
   }
 }
 
+@layer utilities {
+  /* Floating Action Button positioned inside centered max-w-4xl column */
+  .fab-inset {
+    @apply fixed bottom-8; /* keeps vertical spacing consistent */
+    right: calc((100vw - theme(maxWidth.4xl)) / 2 + 2rem);
+  }
+  @media (max-width: 56rem) { /* below max width, just use normal gutter */
+    .fab-inset { right: 2rem; }
+  }
+}
+
 /* Custom style for larger icons in icon buttons */
 .icon-lg.h-10.w-10 svg {
   width: 2em;
