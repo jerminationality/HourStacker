@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SettingsProvider>
             <AppDataProvider>
               <div className="relative flex min-h-screen w-full flex-col items-center">
-                <div className="app-shell bg-background min-h-screen w-full">{children}</div>
+                <div className="w-full max-w-[512px] bg-background min-h-screen">{children}</div>
               </div>
             </AppDataProvider>
           </SettingsProvider>
