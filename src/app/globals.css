@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 21% 90%;
+    --foreground: 220 10% 20%;
+    --card: 210 20% 96%;
+    --card-foreground: 220 10% 20%;
+    --popover: 210 20% 96%;
+    --popover-foreground: 220 10% 20%;
+    --primary: 220 15% 60%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 210 15% 85%;
+    --secondary-foreground: 220 10% 20%;
+    --muted: 210 15% 85%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 170 44% 48%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 15% 80%;
+    --input: 210 15% 88%;
+    --ring: 170 44% 48%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 220 10% 15%;
+    --foreground: 210 20% 90%;
+    --card: 220 10% 20%;
+    --card-foreground: 210 20% 90%;
+    --popover: 220 10% 12%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 220 15% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 10% 30%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 10% 30%;
+    --muted-foreground: 210 20% 70%;
+    --accent: 170 44% 48%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 35%;
+    --input: 220 10% 25%;
+    --ring: 170 44% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom style for larger icons in icon buttons */
+.icon-lg.h-10.w-10 svg {
+  width: 2em;
+  height: 2em;
+}
