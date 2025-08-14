@@ -62,10 +62,21 @@
   /* Floating Action Button positioned inside centered max-w-4xl column */
   .fab-inset {
     @apply fixed bottom-8; /* keeps vertical spacing consistent */
-    right: calc((100vw - theme(maxWidth.4xl)) / 2 + 2rem);
+    /* Align with centered app-shell (max 600px or 100vh*ratio) plus 2rem gutter */
+    right: calc((100vw - min(600px, 100vh * 0.462)) / 2 + 2rem);
   }
-  @media (max-width: 56rem) { /* below max width, just use normal gutter */
-    .fab-inset { right: 2rem; }
+  @media (max-width: 640px) { /* on small screens just use standard gutter */
+    .fab-inset { right: 1.5rem; }
+  }
+
+  /* App shell width constrained to phone aspect (approx 0.462 w/h) when viewport is wide */
+  .app-shell {
+    --phone-ratio: 0.462; /* width = height * ratio */
+    width: 100%;
+    min-width: 360px;
+    max-width: min(600px, calc(100vh * var(--phone-ratio)));
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
