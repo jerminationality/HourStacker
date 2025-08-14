@@ -115,7 +115,7 @@ export default function Home() {
       </header>
 
   <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 gap-4">{/* Removed viewport breakpoints so layout is wrapper-width dependent */}
         {projects.map((project) => (
             <Link key={project.id} href={`/project/${project.id}`} className="block">
                 <Card className="h-full flex flex-col justify-between hover:border-primary/50 transition-colors duration-200 group relative">
