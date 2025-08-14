@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   <meta name="apple-mobile-web-app-title" content="HourStacker" />
   <meta name="format-detection" content="telephone=no" />
       </head>
-      <body className="font-body antialiased bg-background">
+  <body className="font-body antialiased bg-[#1F1F1F] text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SettingsProvider>
             <AppDataProvider>
               <div className="relative flex min-h-screen w-full flex-col items-center">
-                <div className="w-full max-w-4xl">{children}</div>
+                <div className="w-full max-w-4xl bg-background min-h-screen">{children}</div>
               </div>
             </AppDataProvider>
           </SettingsProvider>
