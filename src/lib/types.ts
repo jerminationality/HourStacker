@@ -1,6 +1,8 @@
 export interface Project {
   id: string;
   name: string;
+  // ISO timestamp when the project was created; optional for legacy entries
+  createdAt?: string;
 }
 
 export interface Shift {

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Project, Shift, ActiveShift } from '@/lib/types';
 import { format, differenceInSeconds, parseISO } from 'date-fns';
@@ -33,6 +33,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [activeShifts, setActiveShifts, isActiveShiftsInitialized] = useLocalStorage<ActiveShift[]>('activeShifts', []);
 
   const isInitialized = isProjectsInitialized && isShiftsInitialized && isActiveShiftsInitialized;
+
+  // Backfill createdAt for legacy projects
+  useEffect(() => {
+    if (!isProjectsInitialized) return;
+    const needsBackfill = projects.some(p => !('createdAt' in p) || !p.createdAt);
+    if (needsBackfill) {
+      const now = new Date().toISOString();
+      setProjects(prev => prev.map(p => ({
+        ...p,
+        createdAt: p.createdAt ?? now,
+      })));
+    }
+  }, [isProjectsInitialized, projects, setProjects]);
 
   const contextValue = useMemo(() => {
     const startShift = (projectId: string) => {
@@ -82,6 +95,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const newProject: Project = {
         id: crypto.randomUUID(),
         name,
+  createdAt: new Date().toISOString(),
       };
       setProjects(prev => [...prev, newProject]);
     },
