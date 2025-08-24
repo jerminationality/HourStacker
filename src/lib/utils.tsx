@@ -96,8 +96,9 @@ export function formatTime(timeString: string, format: '12h' | '24h'): string {
 
 // Determine if a shift crosses midnight based purely on its start/end HH:mm strings.
 export function isOvernight(startTime: string, endTime: string): boolean {
-  // If end <= start we treat it as next-day per domain logic
-  return endTime <= startTime;
+  // Consider overnight only if end is strictly earlier than start (crosses midnight)
+  // This avoids false positives when start and end are identical (00:00 == 00:00, etc.)
+  return endTime < startTime;
 }
 
 // Produce a human-readable time range; adds (+1) to indicate next-day end for overnight shifts.
