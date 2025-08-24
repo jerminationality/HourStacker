@@ -256,7 +256,9 @@ export default function ProjectPage() {
                         )}
                       </p>
                     )}
-                    {shift.description && <p className="text-sm text-muted-foreground pt-1">{shift.description}</p>}
+                    {shift.description && (
+                      <p className="text-sm text-muted-foreground pt-1 whitespace-pre-wrap">{shift.description}</p>
+                    )}
                   </div>
                   <div className="flex items-center">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditShiftClick(shift)}>
