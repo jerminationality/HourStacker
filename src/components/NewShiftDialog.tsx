@@ -28,14 +28,14 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, isOvernight, formatShiftRange } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState, useMemo } from "react";
 import { useIsMounted } from '@/hooks/useIsMounted';
 import type { Shift, ActiveShift } from "@/lib/types";
 import { buildDateRange, buildDateRangeFromShift, shiftsOverlap } from '@/domain/shiftTime';
-import { useSettings } from '@/contexts/SettingsContext';
+// removed settings import used only for preview
 
 const createFormSchema = (otherShifts: Shift[], projectId: string, activeShift: ActiveShift | null, editingShift?: Shift | null) => {
     return z.object({
@@ -111,7 +111,6 @@ interface NewShiftDialogProps {
 
 export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftToEdit, allShifts, activeShift }: NewShiftDialogProps) {
   const { addShift, updateShift } = useAppData();
-  const { timeFormat } = useSettings();
   const isEditMode = !!shiftToEdit;
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -159,27 +158,7 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
   }, [shiftToEdit, open, form, isEditMode]);
 
 
-  // Derived preview values
-  const startTimeValue = form.watch('startTime');
-  const endTimeValue = form.watch('endTime');
-  const dateValue = form.watch('date');
-  const showPreview = Boolean(startTimeValue && endTimeValue && dateValue);
-  let previewText: string | null = null;
-  let previewOvernight = false;
-  let previewDuration: string | null = null;
-  if (showPreview) {
-    try {
-      previewOvernight = isOvernight(startTimeValue!, endTimeValue!);
-      previewText = formatShiftRange(startTimeValue!, endTimeValue!, timeFormat);
-      const { start, end } = buildDateRange(new Date(dateValue!), startTimeValue!, endTimeValue!);
-      const mins = Math.max(0, differenceInMinutes(end, start));
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      previewDuration = h > 0 ? `${h}h ${m}m` : `${m}m`;
-    } catch {
-      // ignore preview errors
-    }
-  }
+  // Preview removed per request
 
   function onSubmit(values: z.infer<typeof formSchema>) {
   const { start: startDateTime, end: endDateTime } = buildDateRange(new Date(values.date!), values.startTime!, values.endTime!);
@@ -266,22 +245,7 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
                             </FormItem>
                         )} />
                     </div>
-                    {showPreview && previewText && (
-                      <div className="rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Preview:</span>
-                          <span className="font-medium">{previewText}</span>
-                          {previewOvernight && (
-                            <span className="inline-flex items-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-[11px] font-medium tracking-wide">
-                              Overnight (+1 day)
-                            </span>
-                          )}
-                        </div>
-                        {previewDuration && (
-                          <span className="text-muted-foreground">{previewDuration}</span>
-                        )}
-                      </div>
-                    )}
+                    {/* Removed inline preview and badge in dialog per request */}
                 </div>
              <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
