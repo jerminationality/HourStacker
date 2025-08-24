@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, isOvernight } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState, useMemo } from "react";
@@ -159,6 +159,10 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
 
 
   // Preview removed per request
+  // Minimal overnight indicator in-dialog
+  const startTimeValue = form.watch('startTime');
+  const endTimeValue = form.watch('endTime');
+  const showOvernightBadge = Boolean(startTimeValue && endTimeValue && isOvernight(startTimeValue!, endTimeValue!));
 
   function onSubmit(values: z.infer<typeof formSchema>) {
   const { start: startDateTime, end: endDateTime } = buildDateRange(new Date(values.date!), values.startTime!, values.endTime!);
@@ -245,7 +249,14 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
                             </FormItem>
                         )} />
                     </div>
-                    {/* Removed inline preview and badge in dialog per request */}
+                    {/* Minimal overnight badge (no full preview) */}
+                    {showOvernightBadge && (
+                      <div className="pt-1">
+                        <span className="inline-flex items-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-[11px] font-medium tracking-wide">
+                          Overnight (+1 day)
+                        </span>
+                      </div>
+                    )}
                 </div>
              <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
