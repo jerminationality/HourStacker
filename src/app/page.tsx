@@ -163,14 +163,14 @@ export default function Home() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={projectSortBy} onValueChange={(v: ProjectSortBy) => setProjectSortBy(v)}>
+                <DropdownMenuRadioGroup value={projectSortBy} onValueChange={(v: string) => setProjectSortBy(v as ProjectSortBy)}>
                   <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="createdAt">Date Created</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="totalHours">Total Hours</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Direction</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={projectSortDir} onValueChange={(v: SortDir) => setProjectSortDir(v)}>
+                <DropdownMenuRadioGroup value={projectSortDir} onValueChange={(v: string) => setProjectSortDir(v as SortDir)}>
                   <DropdownMenuRadioItem value="asc">Ascending</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="desc">Descending</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
