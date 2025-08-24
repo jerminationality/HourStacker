@@ -1,4 +1,14 @@
-const CACHE_NAME = 'hour-stacker-cache-v1';
+// Derive a version from the script URL query (e.g., /sw.js?v=<commit-sha>)
+const VERSION = (() => {
+  try {
+    const url = new URL(self.location.href);
+    return url.searchParams.get('v') || 'dev';
+  } catch (_) {
+    return 'dev';
+  }
+})();
+
+const CACHE_NAME = `hour-stacker-cache-${VERSION}`;
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -15,6 +25,8 @@ self.addEventListener('install', (event) => {
         return cache.addAll(urlsToCache);
       })
   );
+  // Activate updated SW immediately
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -58,6 +70,13 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
+});
+
+// Allow page to message the SW to force immediate activation
+self.addEventListener('message', (event) => {
+  if (event && event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
