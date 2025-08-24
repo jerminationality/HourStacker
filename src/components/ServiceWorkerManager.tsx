@@ -9,7 +9,7 @@ export function ServiceWorkerManager() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      const version = process.env.NEXT_PUBLIC_SW_VERSION || String(Date.now());
+  const version = process.env['NEXT_PUBLIC_SW_VERSION'] || String(Date.now());
       const swUrl = `/sw.js?v=${encodeURIComponent(version)}`;
       navigator.serviceWorker
         .register(swUrl)

@@ -13,9 +13,9 @@ const nextConfig: NextConfig = {
   // Prefer the provider's commit SHA; fall back to GitHub Actions or timestamp for local/dev
   env: {
     NEXT_PUBLIC_SW_VERSION:
-      process.env.VERCEL_GIT_COMMIT_SHA ||
-      process.env.GITHUB_SHA ||
-      process.env.COMMIT_SHA ||
+      process.env['VERCEL_GIT_COMMIT_SHA'] ||
+      process.env['GITHUB_SHA'] ||
+      process.env['COMMIT_SHA'] ||
       String(Date.now()),
   },
   images: {
