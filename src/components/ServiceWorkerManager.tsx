@@ -41,7 +41,6 @@ export function ServiceWorkerManager() {
         })
         .catch((error) => console.error('Service Worker registration failed:', error));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function showUpdateToast() {

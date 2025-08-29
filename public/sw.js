@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 // Derive a version from the script URL query (e.g., /sw.js?v=<commit-sha>)
 const VERSION = (() => {
   try {

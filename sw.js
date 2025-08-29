@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 // Enhanced service worker with versioned precache + runtime caching strategies
 // Adjust VERSION on releases to force a new precache.
 // Bump VERSION when changing caching logic so clients fetch a fresh SW.
