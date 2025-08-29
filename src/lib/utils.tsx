@@ -94,6 +94,17 @@ export function formatTime(timeString: string, format: '12h' | '24h'): string {
     }
 }
 
+// Parse a time string like 'H:mm' or 'HH:mm' to minutes since midnight. Invalid => MAX_SAFE_INTEGER.
+export function minutesFromTime(timeString: string): number {
+  if (!timeString || typeof timeString !== 'string') return Number.MAX_SAFE_INTEGER;
+  // Accept either H:mm or HH:mm (00-23 hours)
+  const m = timeString.match(/^([0-1]?\d|2[0-3]):([0-5]\d)$/);
+  if (!m) return Number.MAX_SAFE_INTEGER;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h * 60 + min;
+}
+
 // Determine if a shift crosses midnight based purely on its start/end HH:mm strings.
 export function isOvernight(startTime: string, endTime: string): boolean {
   // Consider overnight only if end is strictly earlier than start (crosses midnight)

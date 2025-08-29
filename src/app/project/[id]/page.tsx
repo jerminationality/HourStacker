@@ -13,7 +13,7 @@ import { NewShiftDialog } from '@/components/NewShiftDialog';
 import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { Shift, Project, ActiveShift } from '@/lib/types';
-import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight } from '@/lib/utils';
+import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -131,26 +131,33 @@ export default function ProjectPage() {
 
   const shiftsGroupedByMonth = useMemo(() => {
     const monthGroups = shifts
-      .filter(shift => shift.date)
+      .filter((shift) => !!shift.date)
       .reduce((acc, shift) => {
-        const monthKey = format(parseISO(shift.date), 'yyyy-MM');
-        if (!acc[monthKey]) {
-          acc[monthKey] = {};
-        }
-
-        const dayKey = format(parseISO(shift.date), 'yyyy-MM-dd');
-        if (!acc[monthKey][dayKey]) {
-          acc[monthKey][dayKey] = [];
-        }
+        // Build stable ISO-like keys using the raw date to avoid locale issues with legacy data
+        const iso = parseISO(shift.date);
+        const monthKey = format(iso, 'yyyy-MM');
+        const dayKey = format(iso, 'yyyy-MM-dd');
+        acc[monthKey] ||= {} as Record<string, Shift[]>;
+        acc[monthKey][dayKey] ||= [] as Shift[];
         acc[monthKey][dayKey].push(shift);
         return acc;
       }, {} as Record<string, Record<string, Shift[]>>);
 
     const sortedMonths = Object.entries(monthGroups)
-      .sort(([monthA], [monthB]) => new Date(monthA).getTime() - new Date(monthB).getTime())
+      // Lexicographic sort works for yyyy-MM keys (ascending)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([month, dayGroups]) => {
         const sortedDays = Object.entries(dayGroups)
-          .sort(([dayA], [dayB]) => parseISO(dayA).getTime() - parseISO(dayB).getTime());
+          // yyyy-MM-dd lexicographic sort (ascending)
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([day, shiftsInDay]) => {
+            const sortedShifts = [...shiftsInDay].sort((s1, s2) => {
+              const m1 = minutesFromTime(s1.startTime);
+              const m2 = minutesFromTime(s2.startTime);
+              return m1 - m2; // ascending within the day
+            });
+            return [day, sortedShifts] as const;
+          });
         return [month, sortedDays] as const;
       });
 
@@ -452,7 +459,7 @@ export default function ProjectPage() {
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="flex items-center space-x-2 my-4">
-                  <Checkbox id="dont-ask-again" checked={dontAskAgain} onCheckedChange={(checked) => setDontAskAgain(checked as boolean)} />
+                  <Checkbox id="dont-ask-again" checked={dontAskAgain} onCheckedChange={(checked: boolean | "indeterminate") => setDontAskAgain(Boolean(checked))} />
                   <Label htmlFor="dont-ask-again" className="text-sm font-normal">Don&apos;t ask me again</Label>
               </div>
               <AlertDialogFooter>
@@ -462,7 +469,7 @@ export default function ProjectPage() {
           </AlertDialogContent>
       </AlertDialog>
       
-      <AlertDialog open={!!groupToDelete} onOpenChange={(open) => !open && setGroupToDelete(null)}>
+  <AlertDialog open={!!groupToDelete} onOpenChange={(open: boolean) => !open && setGroupToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Delete All Shifts?</AlertDialogTitle>
