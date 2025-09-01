@@ -3,6 +3,8 @@ export interface Project {
   name: string;
   // ISO timestamp when the project was created; optional for legacy entries
   createdAt?: string;
+  // Whether the project is archived (hidden from the default list)
+  archived?: boolean;
 }
 
 export interface Shift {

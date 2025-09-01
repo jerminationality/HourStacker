@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useContext } from 'react';
+import { useState, useMemo, useEffect, useContext, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppData } from '@/contexts/AppDataContext';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { NewShiftDialog } from '@/components/NewShiftDialog';
-import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { Shift, Project, ActiveShift } from '@/lib/types';
 import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime } from '@/lib/utils';
@@ -53,7 +53,9 @@ export default function ProjectPage() {
     isInitialized, 
     deleteShift, 
     deleteShiftsByDate,
-    deleteProject,
+  deleteProject,
+  archiveProject,
+  unarchiveProject,
     startShift,
     endShift,
     getActiveShift,
@@ -101,6 +103,15 @@ export default function ProjectPage() {
   
   const handleDeleteGroupClick = (groupName: string) => {
     setGroupToDelete(groupName);
+  }
+
+  const handleArchiveToggle = () => {
+    if (!project) return;
+    if (project.archived) {
+      unarchiveProject(project.id);
+    } else {
+      archiveProject(project.id);
+    }
   }
 
   const confirmDeleteGroup = () => {
@@ -175,6 +186,17 @@ export default function ProjectPage() {
   const totalHours = useMemo(() => {
     return shifts.reduce((acc, shift) => acc + shift.hours, 0);
   }, [shifts]);
+
+  // Auto-scroll to bottom when there is an active shift (on open or when starting)
+  useEffect(() => {
+    if (activeShift) {
+      const id = window.setTimeout(() => {
+        // Jump instantly to bottom without animation
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      }, 0);
+      return () => window.clearTimeout(id);
+    }
+  }, [activeShift]);
 
   const handleExportToText = () => {
     if (!project) return;
@@ -316,10 +338,10 @@ export default function ProjectPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    <span>Edit Project</span>
-                                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  <span>Edit</span>
+                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleExportToText}>
                                     <ClipboardCopy className="mr-2 h-4 w-4" />
                                     <span>Export to Text</span>
@@ -389,9 +411,22 @@ export default function ProjectPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Edit Project</span>
+          <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            <span>Edit</span>
+          </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleArchiveToggle}>
+                      {project.archived ? (
+                        <>
+                          <ArchiveRestore className="mr-2 h-4 w-4" />
+                          <span>Unarchive</span>
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="mr-2 h-4 w-4" />
+                          <span>Archive</span>
+                        </>
+                      )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExportToText}>
                       <ClipboardCopy className="mr-2 h-4 w-4" />
@@ -409,9 +444,6 @@ export default function ProjectPage() {
 
   <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24">
         <div className="space-y-6">
-            {activeShift && (
-              <ActiveShiftCard activeShift={activeShift} onStop={() => endShift(activeShift.id)} />
-            )}
             {shiftsGroupedByMonth.length > 1 ? (
                 <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
                 {shiftsGroupedByMonth.map(([month, dayGroups]) => (
@@ -429,6 +461,9 @@ export default function ProjectPage() {
                 <div className="space-y-4">
                     {shiftsGroupedByMonth.flatMap(([, dayGroups]) => renderShiftGroups(dayGroups))}
                 </div>
+            )}
+            {activeShift && (
+              <ActiveShiftCard activeShift={activeShift} onStop={() => endShift(activeShift.id)} />
             )}
           </div>
       </main>

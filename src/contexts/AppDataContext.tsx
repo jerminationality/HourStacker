@@ -13,6 +13,8 @@ interface AppDataContextProps {
   addProject: (name: string) => void;
   updateProject: (updatedProject: Project) => void;
   deleteProject: (projectId: string) => void;
+  archiveProject: (projectId: string) => void;
+  unarchiveProject: (projectId: string) => void;
   addShift: (shiftData: Omit<Shift, 'id'>) => void;
   updateShift: (updatedShift: Shift) => void;
   deleteShift: (shiftId: string) => void;
@@ -37,12 +39,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Backfill createdAt for legacy projects
   useEffect(() => {
     if (!isProjectsInitialized) return;
-    const needsBackfill = projects.some(p => !('createdAt' in p) || !p.createdAt);
+  const needsBackfill = projects.some(p => !('createdAt' in p) || !p.createdAt || !('archived' in p));
     if (needsBackfill) {
       const now = new Date().toISOString();
       setProjects(prev => prev.map(p => ({
         ...p,
         createdAt: p.createdAt ?? now,
+    archived: p.archived ?? false,
       })));
     }
   }, [isProjectsInitialized, projects, setProjects]);
@@ -88,7 +91,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     };
       
     return {
-    projects,
+  projects,
     shifts,
     activeShifts,
     addProject: (name: string) => {
@@ -96,12 +99,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         id: crypto.randomUUID(),
         name,
   createdAt: new Date().toISOString(),
+    archived: false,
       };
       setProjects(prev => [...prev, newProject]);
     },
     updateProject: (updatedProject: Project) => {
         setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
     },
+  archiveProject: (projectId: string) => {
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, archived: true } : p));
+  },
+  unarchiveProject: (projectId: string) => {
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, archived: false } : p));
+  },
     deleteProject: (projectId: string) => {
         setProjects(prev => prev.filter(p => p.id !== projectId));
         setShifts(prev => prev.filter(s => s.projectId !== projectId));
