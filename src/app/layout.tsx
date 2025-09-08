@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "HourStacker preview"
+        url: "/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "HourStacker app icon"
       }
     ]
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HourStacker",
     description: "Track and visualize your work hours locally with a fast PWA.",
-    images: ["/opengraph-image.png"],
+    images: ["/icon-512x512.png"],
   },
   icons: {
     icon: "/favicon.ico",
