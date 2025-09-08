@@ -5,6 +5,7 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ServiceWorkerManager } from "@/components/ServiceWorkerManager";
+import { ChunkRecovery } from "@/components/ChunkRecovery";
 import { CssWatchdog } from "@/components/CssWatchdog";
 import type { Metadata } from "next";
 
@@ -74,7 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ThemeProvider>
   <Toaster />
   <CssWatchdog />
-        <ServiceWorkerManager />
+  <ServiceWorkerManager />
+  <ChunkRecovery />
       </body>
     </html>
   );

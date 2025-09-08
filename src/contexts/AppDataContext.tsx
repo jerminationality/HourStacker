@@ -3,18 +3,20 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Project, Shift, ActiveShift } from '@/lib/types';
+import { Project, Shift, ActiveShift, Period } from '@/lib/types';
 import { format, differenceInSeconds, parseISO } from 'date-fns';
 
 interface AppDataContextProps {
   projects: Project[];
   shifts: Shift[];
+  periods: Period[];
   activeShifts: ActiveShift[];
   addProject: (name: string) => void;
   updateProject: (updatedProject: Project) => void;
   deleteProject: (projectId: string) => void;
   archiveProject: (projectId: string) => void;
   unarchiveProject: (projectId: string) => void;
+  consolidateCurrentPeriod: (projectId: string, periodName?: string) => void;
   addShift: (shiftData: Omit<Shift, 'id'>) => void;
   updateShift: (updatedShift: Shift) => void;
   deleteShift: (shiftId: string) => void;
@@ -25,6 +27,7 @@ interface AppDataContextProps {
   startShift: (projectId: string) => void;
   endShift: (activeShiftId: string) => void;
   getActiveShift: (projectId: string) => ActiveShift | undefined;
+  updateActiveShiftStart: (activeShiftId: string, newStartISO: string) => void;
 }
 
 const AppDataContext = createContext<AppDataContextProps | undefined>(undefined);
@@ -33,8 +36,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects, isProjectsInitialized] = useLocalStorage<Project[]>('projects', []);
   const [shifts, setShifts, isShiftsInitialized] = useLocalStorage<Shift[]>('shifts', []);
   const [activeShifts, setActiveShifts, isActiveShiftsInitialized] = useLocalStorage<ActiveShift[]>('activeShifts', []);
+  const [periods, setPeriods, isPeriodsInitialized] = useLocalStorage<Period[]>('periods', []);
 
-  const isInitialized = isProjectsInitialized && isShiftsInitialized && isActiveShiftsInitialized;
+  const isInitialized = isProjectsInitialized && isShiftsInitialized && isActiveShiftsInitialized && isPeriodsInitialized;
 
   // Backfill createdAt for legacy projects
   useEffect(() => {
@@ -136,10 +140,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const getActiveShift = (projectId: string) => {
         return activeShifts.find(s => s.projectId === projectId);
     };
+  const updateActiveShiftStart = (activeShiftId: string, newStartISO: string) => {
+    // Basic guard: new start must be before now
+    if (new Date(newStartISO) >= new Date()) return;
+    setActiveShifts(prev => prev.map(s => s.id === activeShiftId ? { ...s, startTime: newStartISO } : s));
+  };
       
-    return {
+  return {
   projects,
     shifts,
+  periods,
     activeShifts,
     addProject: (name: string) => {
       const newProject: Project = {
@@ -163,6 +173,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setProjects(prev => prev.filter(p => p.id !== projectId));
         setShifts(prev => prev.filter(s => s.projectId !== projectId));
         setActiveShifts(prev => prev.filter(s => s.projectId !== projectId));
+        setPeriods(prev => prev.filter(per => per.projectId !== projectId));
+    },
+    consolidateCurrentPeriod: (projectId: string, periodName?: string) => {
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const name = periodName?.trim() || `Period ${new Date().toLocaleDateString()}`;
+      const newPeriod: Period = { id, projectId, name, createdAt: now };
+      setPeriods(prev => [...prev, newPeriod]);
+      // Assign all current active-period shifts (those without periodId) to this new period
+      setShifts(prev => prev.map(s => s.projectId === projectId && !s.periodId ? { ...s, periodId: id } : s));
     },
     addShift: (shiftData: Omit<Shift, 'id'>) => {
       const newShift: Shift = {
@@ -185,7 +205,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     },
     getShiftsByProjectId: (projectId: string) => {
       return shifts
-        .filter(s => s.projectId === projectId)
+        .filter(s => s.projectId === projectId && !s.periodId)
         .sort((a, b) => {
             const dateA = parseISO(`${a.date}T${a.startTime}`);
             const dateB = parseISO(`${b.date}T${b.startTime}`);
@@ -196,6 +216,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     startShift,
     endShift,
     getActiveShift,
+  updateActiveShiftStart,
   }}, [projects, setProjects, shifts, setShifts, activeShifts, setActiveShifts, isInitialized]);
 
   return (

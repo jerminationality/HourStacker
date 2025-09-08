@@ -24,9 +24,15 @@ function getGitSha() {
 const sha = getGitSha();
 process.env.NEXT_PUBLIC_SW_VERSION = sha;
 
-const extraArgs = process.argv.slice(3);
-const cmd = mode === 'dev' ? 'next' : 'next';
-const args = mode === 'dev' ? ['dev', '--turbopack', ...extraArgs] : ['build', ...extraArgs];
+let extraArgs = process.argv.slice(3);
+const disableTurbo = extraArgs.includes('--no-turbo');
+if (disableTurbo) {
+  extraArgs = extraArgs.filter(a => a !== '--no-turbo');
+}
+const cmd = 'next';
+const devArgs = ['dev'];
+if (!disableTurbo) devArgs.push('--turbopack');
+const args = mode === 'dev' ? [...devArgs, ...extraArgs] : ['build', ...extraArgs];
 
 const child = spawn(cmd, args, { stdio: 'inherit', env: process.env, shell: process.platform === 'win32' });
 child.on('exit', (code) => process.exit(code ?? 0));

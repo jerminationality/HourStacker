@@ -107,9 +107,9 @@ interface NewShiftDialogProps {
     shiftToEdit?: Shift | null;
     allShifts: Shift[];
     activeShift: ActiveShift | null;
+  periodId?: string | null; // optional: assign new shift to an existing period
 }
-
-export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftToEdit, allShifts, activeShift }: NewShiftDialogProps) {
+export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftToEdit, allShifts, activeShift, periodId }: NewShiftDialogProps) {
   const { addShift, updateShift } = useAppData();
   const isEditMode = !!shiftToEdit;
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -185,6 +185,7 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
       // Do NOT include an id here so addShift assigns a fresh UUID
       addShift({
         projectId,
+        ...(periodId ? { periodId } : {}),
         hours: totalHours,
         date: format(values.date!, 'yyyy-MM-dd'),
         startTime: values.startTime!,

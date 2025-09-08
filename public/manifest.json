@@ -2,7 +2,7 @@
   "id": "com.hourstacker.app",
   "name": "HourStacker",
   "short_name": "HourStacker",
-  "description": "An app to help you keep track of your hours.",
+  "description": "A simple app for keeping track of your hours.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

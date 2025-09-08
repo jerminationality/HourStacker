@@ -15,6 +15,16 @@ export interface Shift {
   startTime: string;
   endTime: string;
   description: string | null;
+  // Optional period grouping; undefined means part of the current (active) period
+  periodId?: string;
+}
+
+export interface Period {
+  id: string;
+  projectId: string;
+  name: string;
+  createdAt: string; // ISO timestamp
+  // Derived metadata could be computed (e.g., totalHours, date range) rather than stored
 }
 
 export interface ActiveShift {

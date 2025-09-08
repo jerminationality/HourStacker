@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { NewShiftDialog } from '@/components/NewShiftDialog';
-import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive, Layers } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import type { Shift, Project, ActiveShift } from '@/lib/types';
+import type { Shift, Project, ActiveShift, Period } from '@/lib/types';
 import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime } from '@/lib/utils';
 import {
   AlertDialog,
@@ -53,23 +53,66 @@ export default function ProjectPage() {
     isInitialized, 
     deleteShift, 
     deleteShiftsByDate,
-  deleteProject,
-  archiveProject,
-  unarchiveProject,
+    deleteProject,
+    archiveProject,
+    unarchiveProject,
     startShift,
     endShift,
     getActiveShift,
-    shifts: allShifts
+  updateActiveShiftStart,
+    shifts: allShifts,
+    periods,
+    consolidateCurrentPeriod,
   } = useAppData();
   
   const projectIdRaw = (params as Record<string, string | string[]>)["id"];
   const projectId = typeof projectIdRaw === 'string' ? projectIdRaw : '';
   const project = getProjectById(projectId);
   const shifts = getShiftsByProjectId(projectId);
+  const projectPeriods: Period[] = useMemo(() => {
+    const filtered = periods.filter(p => p.projectId === projectId);
+    return filtered.sort((a, b) => {
+      const aDates = allShifts.filter(s => s.projectId === projectId && s.periodId === a.id).map(s => s.date).filter(Boolean).sort();
+      const bDates = allShifts.filter(s => s.projectId === projectId && s.periodId === b.id).map(s => s.date).filter(Boolean).sort();
+      const aKey = aDates[0] || a.createdAt;
+      const bKey = bDates[0] || b.createdAt;
+      // chronological ascending (oldest first)
+      return new Date(aKey).getTime() - new Date(bKey).getTime();
+    });
+  }, [periods, projectId, allShifts]);
+  const [showPeriods, setShowPeriods] = useState(false);
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
+  const periodShifts = useMemo(() => {
+    if (!selectedPeriodId) return [] as Shift[];
+    return allShifts.filter(s => s.projectId === projectId && s.periodId === selectedPeriodId).sort((a,b) => {
+      const dateA = parseISO(`${a.date}T${a.startTime}`);
+      const dateB = parseISO(`${b.date}T${b.startTime}`);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [selectedPeriodId, allShifts, projectId]);
+  const viewedShifts = selectedPeriodId ? periodShifts : shifts;
   const activeShift = getActiveShift(projectId);
   const isHeader = useContext(HeaderContext);
 
+  // Listen for active shift start edit events dispatched by ActiveShiftCard
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id: string; iso: string } | undefined;
+      if (!detail) return;
+      if (activeShift && activeShift.id === detail.id) {
+        updateActiveShiftStart(detail.id, detail.iso);
+      }
+    };
+    window.addEventListener('update-active-shift-start', handler as EventListener);
+    return () => window.removeEventListener('update-active-shift-start', handler as EventListener);
+  }, [activeShift, updateActiveShiftStart]);
+
   const handleStartShift = () => {
+    if (showPeriods) {
+      // Exit periods view to ensure new active shift belongs to current (unconsolidated) set
+      setShowPeriods(false);
+      setSelectedPeriodId(null);
+    }
     if (!activeShift) {
       startShift(projectId);
     }
@@ -141,7 +184,7 @@ export default function ProjectPage() {
   }
 
   const shiftsGroupedByMonth = useMemo(() => {
-    const monthGroups = shifts
+    const monthGroups = viewedShifts
       .filter((shift) => !!shift.date)
       .reduce((acc, shift) => {
         // Build stable ISO-like keys using the raw date to avoid locale issues with legacy data
@@ -173,7 +216,7 @@ export default function ProjectPage() {
       });
 
     return sortedMonths;
-  }, [shifts]);
+  }, [viewedShifts]);
 
   const monthCount = shiftsGroupedByMonth.length;
   useEffect(() => {
@@ -184,8 +227,12 @@ export default function ProjectPage() {
   }, [monthCount]);
   
   const totalHours = useMemo(() => {
-    return shifts.reduce((acc, shift) => acc + shift.hours, 0);
-  }, [shifts]);
+    return viewedShifts.reduce((acc, shift) => acc + shift.hours, 0);
+  }, [viewedShifts]);
+  // Total across all periods + unconsolidated shifts for this project
+  const allProjectHours = useMemo(() => {
+    return allShifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0);
+  }, [allShifts, projectId]);
 
   // Auto-scroll to bottom when there is an active shift (on open or when starting)
   useEffect(() => {
@@ -307,7 +354,7 @@ export default function ProjectPage() {
     ))
   );
 
-  if (shifts.length === 0 && !activeShift) {
+  if (shifts.length === 0 && !activeShift && projectPeriods.length === 0) {
     return (
         <div className="flex flex-col min-h-screen bg-background">
       <header className="p-4 sm:p-6 border-b border-border/50 bg-card/50 sticky top-0 backdrop-blur-sm z-10">
@@ -319,18 +366,50 @@ export default function ProjectPage() {
                         <div>
                             <h1 className="text-xl sm:text-2xl font-bold text-foreground font-headline">{project.name}</h1>
                             <div className="font-bold text-foreground">
-                              <HeaderContext.Provider value={true}>
-                                {formatHours(totalHours, hourFormat, true)}
-                              </HeaderContext.Provider>
+                              {hourFormat === 'decimal' ? (
+                                <div className="text-xl">
+                                  {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
+                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Total Hours'}</span>
+                                </div>
+                              ) : (
+                                <HeaderContext.Provider value={true}>
+                                  {formatHours(showPeriods ? allProjectHours : totalHours, hourFormat, true)}
+                                </HeaderContext.Provider>
+                              )}
                             </div>
                         </div>
                     </div>
                      <div className="flex items-center gap-2">
-                        { !activeShift && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleStartShift}>
-                                <Clock className="h-5 w-5 text-green-600" />
-                            </Button>
+                        {projectPeriods.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={showPeriods ? 'Hide periods' : 'Show periods'}
+                            className={`h-8 w-8 transition-colors ${showPeriods ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
+                            onClick={() => {
+                              setShowPeriods(p => !p);
+                              if (showPeriods) setSelectedPeriodId(null);
+                            }}
+                          >
+                            <Layers className="h-5 w-5" />
+                          </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={activeShift ? 'Stop active shift' : 'Start shift'}
+                          className="h-8 w-8"
+                          onClick={() => {
+                            const current = activeShift as ActiveShift | undefined;
+                            if (current?.id) {
+                              endShift(current.id);
+                            } else {
+                              handleStartShift();
+                            }
+                          }}
+                        >
+                          <Clock className={`h-5 w-5 ${activeShift ? 'text-red-600' : 'text-green-600'}`} />
+                        </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
@@ -356,22 +435,25 @@ export default function ProjectPage() {
                 </div>
             </header>
             <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24 flex items-center justify-center">
-                 <NewShiftDialog 
-                    projectId={projectId} 
-                    open={isShiftDialogOpen} 
-                    onOpenChange={handleShiftDialogStateChange} 
-                    shiftToEdit={shiftToEdit}
-                    allShifts={allShifts}
-                    activeShift={activeShift || null}
-                  >
-                    <Button
-                    size="icon"
-                    className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
-                    onClick={() => handleShiftDialogStateChange(true)}
+                 {(!showPeriods || selectedPeriodId) && (
+                   <NewShiftDialog 
+                      projectId={projectId} 
+                      open={isShiftDialogOpen} 
+                      onOpenChange={handleShiftDialogStateChange} 
+                      shiftToEdit={shiftToEdit}
+                      allShifts={allShifts}
+                      activeShift={activeShift || null}
+                      periodId={showPeriods ? selectedPeriodId : null}
                     >
-                    <Plus className="h-6 w-6" />
-                    </Button>
-                </NewShiftDialog>
+                      <Button
+                      size="icon"
+                      className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
+                      onClick={() => handleShiftDialogStateChange(true)}
+                      >
+                      <Plus className="h-6 w-6" />
+                      </Button>
+                  </NewShiftDialog>
+                 )}
             </main>
         </div>
     )
@@ -392,18 +474,50 @@ export default function ProjectPage() {
             <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground font-headline">{project.name}</h1>
                  <div className="font-bold text-foreground">
-                    <HeaderContext.Provider value={true}>
-                        {formatHours(totalHours, hourFormat, true)}
-                    </HeaderContext.Provider>
-                </div>
+                   {hourFormat === 'decimal' ? (
+                      <div className="text-xl">
+                        {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
+                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Total Hours'}</span>
+                      </div>
+                   ) : (
+                      <HeaderContext.Provider value={true}>
+                        {formatHours(showPeriods ? allProjectHours : totalHours, hourFormat, true)}
+                      </HeaderContext.Provider>
+                   )}
+                 </div>
             </div>
           </div>
            <div className="flex items-center gap-2">
-              { !activeShift && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleStartShift}>
-                      <Clock className="h-5 w-5 text-green-600" />
-                  </Button>
+              {projectPeriods.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={showPeriods ? 'Hide periods' : 'Show periods'}
+                  className={`h-8 w-8 transition-colors ${showPeriods ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
+                  onClick={() => {
+                    setShowPeriods(p => !p);
+                    if (showPeriods) setSelectedPeriodId(null);
+                  }}
+                >
+                  <Layers className="h-5 w-5" />
+                </Button>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={activeShift ? 'Stop active shift' : 'Start shift'}
+                className="h-8 w-8"
+                onClick={() => {
+                  const current = activeShift as ActiveShift | undefined;
+                  if (current?.id) {
+                    endShift(current.id);
+                  } else {
+                    handleStartShift();
+                  }
+                }}
+              >
+                <Clock className={`h-5 w-5 ${activeShift ? 'text-red-600' : 'text-green-600'}`} />
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
@@ -411,10 +525,18 @@ export default function ProjectPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
-            <Edit className="mr-2 h-4 w-4" />
-            <span>Edit</span>
-          </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => consolidateCurrentPeriod(project.id)}>
+                    <ClipboardCopy className="mr-2 h-4 w-4" />
+                    <span>Consolidate Period</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportToText}>
+                      <ClipboardCopy className="mr-2 h-4 w-4" />
+                      <span>Export to Text</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleArchiveToggle}>
                       {project.archived ? (
                         <>
@@ -428,10 +550,6 @@ export default function ProjectPage() {
                         </>
                       )}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportToText}>
-                      <ClipboardCopy className="mr-2 h-4 w-4" />
-                      <span>Export to Text</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setIsProjectDeleteAlertOpen(true)} className="text-destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>Delete Project</span>
@@ -444,46 +562,110 @@ export default function ProjectPage() {
 
   <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24">
         <div className="space-y-6">
-            {shiftsGroupedByMonth.length > 1 ? (
-                <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
-                {shiftsGroupedByMonth.map(([month, dayGroups]) => (
-                    <AccordionItem value={month} key={month} className="border-none">
-                    <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
-                        {format(parseISO(month), "MMMM yyyy")}
-                        </AccordionTrigger>
-                        <AccordionContent className="!pt-4 space-y-4">
-                            {renderShiftGroups(dayGroups)}
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-                </Accordion>
-            ) : (
-                <div className="space-y-4">
-                    {shiftsGroupedByMonth.flatMap(([, dayGroups]) => renderShiftGroups(dayGroups))}
-                </div>
+            {showPeriods && projectPeriods.length > 0 && (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <span>Periods</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {projectPeriods.map(per => {
+                        const periodShiftsForPer = allShifts.filter(s => s.projectId === projectId && s.periodId === per.id);
+                        const hours = periodShiftsForPer.reduce((acc, s) => acc + s.hours, 0);
+                        const isSelected = selectedPeriodId === per.id;
+                        const valueColor = isSelected ? 'text-accent-foreground' : 'text-muted-foreground group-hover:text-accent-foreground';
+                        // Build date label: single date or range
+                        const uniqueDates = Array.from(new Set(periodShiftsForPer.map(s => s.date).filter(Boolean)));
+                        let dateLabel: string;
+                        if (uniqueDates.length === 0) {
+                          // Fallback to createdAt
+                          try {
+                            dateLabel = format(parseISO(per.createdAt), 'MM/dd/yyyy');
+                          } catch {
+                            dateLabel = '—';
+                          }
+                        } else if (uniqueDates.length === 1) {
+                          dateLabel = format(parseISO(uniqueDates[0]!), 'MM/dd/yyyy');
+                        } else {
+                          // Sort lexicographically works for yyyy-MM-dd
+                          const sorted = [...uniqueDates].sort();
+                          const first = format(parseISO(sorted[0]!), 'MM/dd/yyyy');
+                          const last = format(parseISO(sorted[sorted.length - 1]!), 'MM/dd/yyyy');
+                          dateLabel = `${first} - ${last}`;
+                        }
+                        return (
+                          <li key={per.id}>
+                            <Button
+                              variant="outline"
+                              className={`group w-full justify-between ${isSelected ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
+                              onClick={() => setSelectedPeriodId(isSelected ? null : per.id)}
+                            >
+                              <span className="truncate text-left pr-2">{dateLabel}</span>
+                              {hourFormat === 'decimal' ? (
+                                <span className="text-sm flex items-baseline gap-1">
+                                  <span className={`${valueColor} font-medium`}>{hours.toFixed(2)}</span>
+                                  <span className={valueColor}>Total Hours</span>
+                                </span>
+                              ) : (
+                                <span className={`text-sm ${valueColor}`}>{formatHours(hours, hourFormat, true)}</span>
+                              )}
+                            </Button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
             )}
-            {activeShift && (
+            {(!showPeriods || selectedPeriodId) && (
+              shiftsGroupedByMonth.length > 1 ? (
+                <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
+                  {shiftsGroupedByMonth.map(([month, dayGroups]) => (
+                    <AccordionItem value={month} key={month} className="border-none">
+                      <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
+                        {format(parseISO(month), "MMMM yyyy")}
+                      </AccordionTrigger>
+                      <AccordionContent className="!pt-4 space-y-4">
+                        {renderShiftGroups(dayGroups)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="space-y-4">
+                  {shiftsGroupedByMonth.flatMap(([, dayGroups]) => renderShiftGroups(dayGroups))}
+                </div>
+              )
+            )}
+            {(!showPeriods || selectedPeriodId) && activeShift && (
               <ActiveShiftCard activeShift={activeShift} onStop={() => endShift(activeShift.id)} />
             )}
           </div>
       </main>
       
-      <NewShiftDialog 
-        projectId={projectId} 
-        open={isShiftDialogOpen} 
-        onOpenChange={handleShiftDialogStateChange} 
-        shiftToEdit={shiftToEdit}
-        allShifts={allShifts}
-  activeShift={activeShift || null}
-      >
-        <Button
-          size="icon"
-          className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
-          onClick={() => setIsShiftDialogOpen(true)}
+      {(!showPeriods || selectedPeriodId) && (
+        <NewShiftDialog 
+          projectId={projectId} 
+          open={isShiftDialogOpen} 
+          onOpenChange={handleShiftDialogStateChange} 
+          shiftToEdit={shiftToEdit}
+          allShifts={allShifts}
+          activeShift={activeShift || null}
+          periodId={showPeriods ? selectedPeriodId : null}
         >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </NewShiftDialog>
+          <Button
+            size="icon"
+            className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
+            onClick={() => setIsShiftDialogOpen(true)}
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </NewShiftDialog>
+      )}
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>

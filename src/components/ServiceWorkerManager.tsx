@@ -8,6 +8,7 @@ export function ServiceWorkerManager() {
   const refreshingRef = useRef(false);
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') return; // Avoid SW in dev to reduce stale chunk issues
     if ('serviceWorker' in navigator) {
   const version = process.env['NEXT_PUBLIC_SW_VERSION'] || String(Date.now());
       const swUrl = `/sw.js?v=${encodeURIComponent(version)}`;
