@@ -6,13 +6,43 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ServiceWorkerManager } from "@/components/ServiceWorkerManager";
 import { CssWatchdog } from "@/components/CssWatchdog";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "HourStacker",
+  description: "Track and visualize your work hours locally with a fast PWA.",
+  // Optional: set NEXT_PUBLIC_SITE_URL for absolute OG URLs
+  metadataBase: process.env["NEXT_PUBLIC_SITE_URL"] ? new URL(process.env["NEXT_PUBLIC_SITE_URL"] as string) : undefined,
+  openGraph: {
+    title: "HourStacker",
+    description: "Track and visualize your work hours locally with a fast PWA.",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "HourStacker preview"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HourStacker",
+    description: "Track and visualize your work hours locally with a fast PWA.",
+    images: ["/opengraph-image.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icon-192x192.png"
+  }
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>HourStacker</title>
-        <meta name="description" content="An app to help you keep track of your hours." />
+  {/* Title & description now provided via Next.js metadata API */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
