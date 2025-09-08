@@ -70,6 +70,33 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     });
   }, [isShiftsInitialized, setShifts]);
 
+  // Guard: continuously ensure no duplicate/blank shift IDs remain (covers legacy state loaded *after* initial effect)
+  useEffect(() => {
+    if (!isShiftsInitialized) return;
+    const ids = new Set<string>();
+    let needsRepair = false;
+    for (const s of shifts) {
+      if (!s.id || s.id.trim() === '' || ids.has(s.id)) {
+        needsRepair = true;
+        break;
+      }
+      ids.add(s.id);
+    }
+    if (needsRepair) {
+      setShifts(prev => {
+        const seen = new Set<string>();
+        return prev.map(s => {
+          let id = s.id;
+          if (!id || id.trim() === '' || seen.has(id)) {
+            id = crypto.randomUUID();
+          }
+          seen.add(id);
+          return id === s.id ? s : { ...s, id };
+        });
+      });
+    }
+  }, [shifts, isShiftsInitialized, setShifts]);
+
   const contextValue = useMemo(() => {
     const startShift = (projectId: string) => {
         const newActiveShift: ActiveShift = {

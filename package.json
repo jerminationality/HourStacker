@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/run-with-sw-version.mjs dev",
-    "build": "node scripts/run-with-sw-version.mjs build",
+  "dev": "npm run lint && node scripts/run-with-sw-version.mjs dev",
+  "build": "npm run lint && node scripts/run-with-sw-version.mjs build",
     "start": "next start",
   "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
   "lint:fix": "npm run lint -- --fix",
