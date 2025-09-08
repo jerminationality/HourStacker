@@ -170,20 +170,27 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
     const totalMinutes = differenceInMinutes(endDateTime, startDateTime);
     const totalHours = totalMinutes / 60;
     
-    const shiftData = {
-        id: isEditMode && shiftToEdit ? shiftToEdit.id : '',
+    if (isEditMode && shiftToEdit) {
+      const updated: Shift = {
+        ...shiftToEdit,
+        projectId, // unchanged but explicit
+        hours: totalHours,
+        date: format(values.date!, 'yyyy-MM-dd'),
+        startTime: values.startTime!,
+        endTime: values.endTime!,
+        description: values.description || null,
+      };
+      updateShift(updated);
+    } else {
+      // Do NOT include an id here so addShift assigns a fresh UUID
+      addShift({
         projectId,
         hours: totalHours,
         date: format(values.date!, 'yyyy-MM-dd'),
         startTime: values.startTime!,
         endTime: values.endTime!,
         description: values.description || null,
-    };
-
-    if (isEditMode) {
-      updateShift(shiftData as Shift);
-    } else {
-      addShift(shiftData);
+      });
     }
     
   form.reset({ description: "", startTime: "", endTime: "", date: todayYMD });

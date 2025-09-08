@@ -50,6 +50,26 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
   }, [isProjectsInitialized, projects, setProjects]);
 
+  // Migration: fix blank or duplicate shift IDs (caused by earlier edit bug)
+  useEffect(() => {
+    if (!isShiftsInitialized) return;
+    setShifts(prev => {
+      if (!Array.isArray(prev) || prev.length === 0) return prev;
+      const seen = new Set<string>();
+      let mutated = false;
+      const repaired = prev.map(s => {
+        let id = s.id;
+        if (!id || id.trim() === '' || seen.has(id)) {
+          id = crypto.randomUUID();
+          mutated = true;
+        }
+        seen.add(id);
+        return id === s.id ? s : { ...s, id };
+      });
+      return mutated ? repaired : prev;
+    });
+  }, [isShiftsInitialized, setShifts]);
+
   const contextValue = useMemo(() => {
     const startShift = (projectId: string) => {
         const newActiveShift: ActiveShift = {

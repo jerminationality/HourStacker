@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+/* eslint-env node */
 // Runs next dev/build with NEXT_PUBLIC_SW_VERSION set to the current git commit SHA.
 import { execSync, spawn } from 'node:child_process';
 import process from 'node:process';
 
 const mode = process.argv[2];
 if (!['dev', 'build'].includes(mode)) {
-  console.error('Usage: node scripts/run-with-sw-version.mjs <dev|build> [extra args...]');
+  process.stderr.write('Usage: node scripts/run-with-sw-version.mjs <dev|build> [extra args...]\n');
   process.exit(1);
 }
 
