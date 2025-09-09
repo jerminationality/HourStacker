@@ -17,6 +17,8 @@ interface SettingsContextProps {
   setHourFormat: (format: HourFormat) => void;
   confirmDeleteShift: boolean;
   setConfirmDeleteShift: (confirm: boolean) => void;
+  showTotalProjectHoursOnCards: boolean;
+  setShowTotalProjectHoursOnCards: (show: boolean) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   isInitialized: boolean;
@@ -32,11 +34,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormat, isTimeFormatInitialized] = useLocalStorage<TimeFormat>('timeFormat', '12h');
   const [hourFormat, setHourFormat, isHourFormatInitialized] = useLocalStorage<HourFormat>('hourFormat', 'decimal');
   const [confirmDeleteShift, setConfirmDeleteShift, isConfirmDeleteShiftInitialized] = useLocalStorage<boolean>('confirmDeleteShift', true);
+  const [showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, isShowTotalProjectHoursOnCardsInitialized] = useLocalStorage<boolean>('showTotalProjectHoursOnCards', false);
   const [theme, setTheme, isThemeInitialized] = useLocalStorage<Theme>('theme', 'light');
   const [projectSortBy, setProjectSortBy, isSortByInit] = useLocalStorage<ProjectSortBy>('projectSortBy', 'name');
   const [projectSortDir, setProjectSortDir, isSortDirInit] = useLocalStorage<SortDir>('projectSortDir', 'asc');
   
-  const isInitialized = isTimeFormatInitialized && isHourFormatInitialized && isConfirmDeleteShiftInitialized && isThemeInitialized && isSortByInit && isSortDirInit;
+  const isInitialized = 
+    isTimeFormatInitialized && 
+    isHourFormatInitialized && 
+    isConfirmDeleteShiftInitialized && 
+    isShowTotalProjectHoursOnCardsInitialized &&
+    isThemeInitialized && 
+    isSortByInit && 
+    isSortDirInit;
 
   const contextValue = useMemo(() => ({ // Add theme to the dependency array
     timeFormat,
@@ -45,6 +55,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setHourFormat,
     confirmDeleteShift,
     setConfirmDeleteShift,
+    showTotalProjectHoursOnCards,
+    setShowTotalProjectHoursOnCards,
     isInitialized,
     theme,
     setTheme,
@@ -52,7 +64,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setProjectSortBy,
     projectSortDir,
     setProjectSortDir,
-  }), [timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, isInitialized, theme, setTheme, projectSortBy, setProjectSortBy, projectSortDir, setProjectSortDir]);
+  }), [timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, isInitialized, theme, setTheme, projectSortBy, setProjectSortBy, projectSortDir, setProjectSortDir]);
 
   return (
     <SettingsContext.Provider value={contextValue}>

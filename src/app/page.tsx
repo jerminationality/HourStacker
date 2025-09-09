@@ -39,7 +39,7 @@ import {
 
 export default function Home() {
   const { projects, shifts, deleteProject, archiveProject, unarchiveProject, getShiftsByProjectId } = useAppData();
-  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir } = useSettings();
+  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir, showTotalProjectHoursOnCards } = useSettings();
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
@@ -48,6 +48,13 @@ export default function Home() {
   
   const { toast } = useToast();
 
+  // Unconsolidated (current) hours exclude shifts with a periodId (i.e., current period only)
+  const getProjectCurrentHours = (projectId: string) => {
+    return shifts
+      .filter((shift: Shift) => shift.projectId === projectId && !shift.periodId)
+      .reduce((acc: number, shift: Shift) => acc + shift.hours, 0);
+  };
+  // Total project hours include all shifts (consolidated + current)
   const getProjectTotalHours = (projectId: string) => {
     return shifts
       .filter((shift: Shift) => shift.projectId === projectId)
@@ -66,8 +73,8 @@ export default function Home() {
       return (aTime - bTime) * dir;
     }
     // totalHours
-    const aHours = getProjectTotalHours(a.id);
-    const bHours = getProjectTotalHours(b.id);
+  const aHours = getProjectTotalHours(a.id); // Sorting still uses total hours
+  const bHours = getProjectTotalHours(b.id);
     return (aHours - bHours) * dir;
   });
   
@@ -281,9 +288,18 @@ export default function Home() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-foreground">
-                        {formatHours(getProjectTotalHours(project.id), hourFormat, false)}
+                        {formatHours(getProjectCurrentHours(project.id), hourFormat, false)}
                         </div>
-                        <p className="text-sm text-muted-foreground">Total Hours</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-3">
+                          <span>Current Hours</span>
+                          {showTotalProjectHoursOnCards && (
+                            <span className="flex items-center gap-2">
+                              <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
+                              <span className="text-foreground font-medium">{getProjectTotalHours(project.id).toFixed(2)}</span>
+                              <span className="text-muted-foreground">Total Project Hours</span>
+                            </span>
+                          )}
+                        </p>
                     </CardContent>
                 </Card>
             </Link>

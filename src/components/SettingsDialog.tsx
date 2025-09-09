@@ -26,7 +26,7 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogProps) {
     const { theme, setTheme } = useTheme();
-    const { timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift } = useSettings();
+    const { timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards } = useSettings();
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,6 +89,17 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                             id="confirm-delete"
                             checked={confirmDeleteShift}
                             onCheckedChange={setConfirmDeleteShift}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <Label htmlFor="show-total-proj-hours" className="text-base">Display total project hours on project cards</Label>
+                            <p className="text-sm text-muted-foreground">Show consolidated + current hours side by side.</p>
+                        </div>
+                        <Switch
+                            id="show-total-proj-hours"
+                            checked={showTotalProjectHoursOnCards}
+                            onCheckedChange={setShowTotalProjectHoursOnCards}
                         />
                     </div>
                 </div>
