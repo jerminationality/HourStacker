@@ -369,7 +369,7 @@ export default function ProjectPage() {
                               {hourFormat === 'decimal' ? (
                                 <div className="text-xl">
                                   {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
-                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Total Hours'}</span>
+                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Current Hours'}</span>
                                 </div>
                               ) : (
                                 <HeaderContext.Provider value={true}>
@@ -477,7 +477,7 @@ export default function ProjectPage() {
                    {hourFormat === 'decimal' ? (
                       <div className="text-xl">
                         {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
-                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Total Hours'}</span>
+                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Current Hours'}</span>
                       </div>
                    ) : (
                       <HeaderContext.Provider value={true}>

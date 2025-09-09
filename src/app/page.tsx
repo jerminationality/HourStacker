@@ -295,7 +295,7 @@ export default function Home() {
                           {showTotalProjectHoursOnCards && (
                             <span className="flex items-center gap-2">
                               <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
-                              <span className="text-foreground font-medium">{getProjectTotalHours(project.id).toFixed(2)}</span>
+                              <span className="text-foreground font-bold">{getProjectTotalHours(project.id).toFixed(2)}</span>
                               <span className="text-muted-foreground">Total Project Hours</span>
                             </span>
                           )}
