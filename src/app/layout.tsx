@@ -53,10 +53,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
         <meta name="theme-color" content="#778DA9" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="HourStacker" />
   <meta name="format-detection" content="telephone=no" />
+  <style>{`:root,body,html{touch-action:manipulation;overscroll-behavior:contain}`}</style>
       </head>
   <body className="font-body antialiased bg-[#1F1F1F] text-foreground">
         <ThemeProvider
