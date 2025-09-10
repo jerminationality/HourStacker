@@ -20,7 +20,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Print workspace root
+        run: pwd && ls -1a
 
       - name: Lint & Typecheck
         run: npm run check
@@ -28,10 +31,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          echo "Listing build root";
+          ls -lah .;
+          if [ -d .next ]; then
+            echo ".next directory contents:";
+            find .next -maxdepth 2 -type f -printf '%p\n' | head -50;
+          else
+            echo "ERROR: .next directory not found after build";
+            echo "All directories in workspace:";
+            find . -maxdepth 4 -type d;
+            exit 1;
+          fi
+
       - name: Upload production build artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: .next
+          path: .next/**
           if-no-files-found: error
