@@ -122,7 +122,7 @@ export default function ArchivePage() {
                   <DropdownMenuRadioItem value="totalHours">Total Hours</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Direction</DropdownMenuLabel>
+                <DropdownMenuLabel>Order</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value={projectSortDir} onValueChange={(v: string) => setProjectSortDir(v as SortDir)}>
                   <DropdownMenuRadioItem value="asc">Ascending</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="desc">Descending</DropdownMenuRadioItem>
