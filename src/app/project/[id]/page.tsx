@@ -80,17 +80,8 @@ export default function ProjectPage() {
       return new Date(aKey).getTime() - new Date(bKey).getTime();
     });
   }, [periods, projectId, allShifts]);
-  const [showPeriods, setShowPeriods] = useState(false);
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
-  const periodShifts = useMemo(() => {
-    if (!selectedPeriodId) return [] as Shift[];
-    return allShifts.filter(s => s.projectId === projectId && s.periodId === selectedPeriodId).sort((a,b) => {
-      const dateA = parseISO(`${a.date}T${a.startTime}`);
-      const dateB = parseISO(`${b.date}T${b.startTime}`);
-      return dateB.getTime() - dateA.getTime();
-    });
-  }, [selectedPeriodId, allShifts, projectId]);
-  const viewedShifts = selectedPeriodId ? periodShifts : shifts;
+  // Always view current (unconsolidated) shifts on the project page; consolidated periods render separately above.
+  const viewedShifts = shifts;
   const activeShift = getActiveShift(projectId);
   const isHeader = useContext(HeaderContext);
 
@@ -108,14 +99,7 @@ export default function ProjectPage() {
   }, [activeShift, updateActiveShiftStart]);
 
   const handleStartShift = () => {
-    if (showPeriods) {
-      // Exit periods view to ensure new active shift belongs to current (unconsolidated) set
-      setShowPeriods(false);
-      setSelectedPeriodId(null);
-    }
-    if (!activeShift) {
-      startShift(projectId);
-    }
+    if (!activeShift) startShift(projectId);
   };
 
   const handleEditShiftClick = (shift: Shift) => {
@@ -368,32 +352,19 @@ export default function ProjectPage() {
                             <div className="font-bold text-foreground">
                               {hourFormat === 'decimal' ? (
                                 <div className="text-xl">
-                                  {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
-                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Current Hours'}</span>
+                                  {totalHours.toFixed(2)}
+                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> Current Hours</span>
                                 </div>
                               ) : (
                                 <HeaderContext.Provider value={true}>
-                                  {formatHours(showPeriods ? allProjectHours : totalHours, hourFormat, true)}
+                                  {formatHours(totalHours, hourFormat, true)}
                                 </HeaderContext.Provider>
                               )}
                             </div>
                         </div>
                     </div>
                      <div className="flex items-center gap-2">
-                        {projectPeriods.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={showPeriods ? 'Hide periods' : 'Show periods'}
-                            className={`h-8 w-8 transition-colors ${showPeriods ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
-                            onClick={() => {
-                              setShowPeriods(p => !p);
-                              if (showPeriods) setSelectedPeriodId(null);
-                            }}
-                          >
-                            <Layers className="h-5 w-5" />
-                          </Button>
-                        )}
+                        {/* Periods render on-page above current shifts; no toggle needed */}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -435,16 +406,15 @@ export default function ProjectPage() {
                 </div>
             </header>
             <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24 flex items-center justify-center">
-                 {(!showPeriods || selectedPeriodId) && (
-                   <NewShiftDialog 
-                      projectId={projectId} 
-                      open={isShiftDialogOpen} 
-                      onOpenChange={handleShiftDialogStateChange} 
-                      shiftToEdit={shiftToEdit}
-                      allShifts={allShifts}
-                      activeShift={activeShift || null}
-                      periodId={showPeriods ? selectedPeriodId : null}
-                    >
+                 <NewShiftDialog 
+                    projectId={projectId} 
+                    open={isShiftDialogOpen} 
+                    onOpenChange={handleShiftDialogStateChange} 
+                    shiftToEdit={shiftToEdit}
+                    allShifts={allShifts}
+                    activeShift={activeShift || null}
+                    periodId={null}
+                  >
                       <Button
                       size="icon"
                       className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
@@ -453,7 +423,6 @@ export default function ProjectPage() {
                       <Plus className="h-6 w-6" />
                       </Button>
                   </NewShiftDialog>
-                 )}
             </main>
         </div>
     )
@@ -476,32 +445,19 @@ export default function ProjectPage() {
                  <div className="font-bold text-foreground">
                    {hourFormat === 'decimal' ? (
                       <div className="text-xl">
-                        {(showPeriods ? allProjectHours : totalHours).toFixed(2)}
-                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> {showPeriods ? 'Total Project Hours' : 'Current Hours'}</span>
+                        {totalHours.toFixed(2)}
+                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> Current Hours</span>
                       </div>
                    ) : (
                       <HeaderContext.Provider value={true}>
-                        {formatHours(showPeriods ? allProjectHours : totalHours, hourFormat, true)}
+                        {formatHours(totalHours, hourFormat, true)}
                       </HeaderContext.Provider>
                    )}
                  </div>
             </div>
           </div>
            <div className="flex items-center gap-2">
-              {projectPeriods.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={showPeriods ? 'Hide periods' : 'Show periods'}
-                  className={`h-8 w-8 transition-colors ${showPeriods ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
-                  onClick={() => {
-                    setShowPeriods(p => !p);
-                    if (showPeriods) setSelectedPeriodId(null);
-                  }}
-                >
-                  <Layers className="h-5 w-5" />
-                </Button>
-              )}
+              {/* No periods toggle; consolidated periods show above current shifts */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -562,66 +518,65 @@ export default function ProjectPage() {
 
   <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24">
         <div className="space-y-6">
-            {showPeriods && projectPeriods.length > 0 && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <span>Periods</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {projectPeriods.map(per => {
-                        const periodShiftsForPer = allShifts.filter(s => s.projectId === projectId && s.periodId === per.id);
-                        const hours = periodShiftsForPer.reduce((acc, s) => acc + s.hours, 0);
-                        const isSelected = selectedPeriodId === per.id;
-                        const valueColor = isSelected ? 'text-accent-foreground' : 'text-muted-foreground group-hover:text-accent-foreground';
-                        // Build date label: single date or range
-                        const uniqueDates = Array.from(new Set(periodShiftsForPer.map(s => s.date).filter(Boolean)));
-                        let dateLabel: string;
-                        if (uniqueDates.length === 0) {
-                          // Fallback to createdAt
-                          try {
-                            dateLabel = format(parseISO(per.createdAt), 'MM/dd/yyyy');
-                          } catch {
-                            dateLabel = '—';
-                          }
-                        } else if (uniqueDates.length === 1) {
-                          dateLabel = format(parseISO(uniqueDates[0]!), 'MM/dd/yyyy');
-                        } else {
-                          // Sort lexicographically works for yyyy-MM-dd
-                          const sorted = [...uniqueDates].sort();
-                          const first = format(parseISO(sorted[0]!), 'MM/dd/yyyy');
-                          const last = format(parseISO(sorted[sorted.length - 1]!), 'MM/dd/yyyy');
-                          dateLabel = `${first} - ${last}`;
-                        }
-                        return (
-                          <li key={per.id}>
-                            <Button
-                              variant="outline"
-                              className={`group w-full justify-between ${isSelected ? 'bg-accent text-accent-foreground hover:bg-accent' : ''}`}
-                              onClick={() => setSelectedPeriodId(isSelected ? null : per.id)}
-                            >
-                              <span className="truncate text-left pr-2">{dateLabel}</span>
-                              {hourFormat === 'decimal' ? (
-                                <span className="text-sm flex items-baseline gap-1">
-                                  <span className={`${valueColor} font-medium`}>{hours.toFixed(2)}</span>
-                                  <span className={valueColor}>Total Hours</span>
-                                </span>
-                              ) : (
-                                <span className={`text-sm ${valueColor}`}>{formatHours(hours, hourFormat, true)}</span>
-                              )}
-                            </Button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </CardContent>
-                </Card>
+            {projectPeriods.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-xl font-bold font-headline text-foreground">Past Periods</h2>
+                <Accordion type="multiple" className="w-full space-y-3">
+                  {[...projectPeriods].reverse().map((per) => {
+                    const periodShiftsForPer = allShifts.filter(s => s.projectId === projectId && s.periodId === per.id);
+                    const hours = periodShiftsForPer.reduce((acc, s) => acc + s.hours, 0);
+                    // Build date label: single date or range
+                    const uniqueDates = Array.from(new Set(periodShiftsForPer.map(s => s.date).filter(Boolean)));
+                    let dateLabel: string;
+                    if (uniqueDates.length === 0) {
+                      try { dateLabel = format(parseISO(per.createdAt), 'MM/dd/yyyy'); } catch { dateLabel = '—'; }
+                    } else if (uniqueDates.length === 1) {
+                      dateLabel = format(parseISO(uniqueDates[0]!), 'MM/dd/yyyy');
+                    } else {
+                      const sorted = [...uniqueDates].sort();
+                      const first = format(parseISO(sorted[0]!), 'MM/dd/yyyy');
+                      const last = format(parseISO(sorted[sorted.length - 1]!), 'MM/dd/yyyy');
+                      dateLabel = `${first} - ${last}`;
+                    }
+                    // Group this period's shifts by day (ascending) for rendering
+                    const dayGroups = Object.entries(periodShiftsForPer.reduce((acc, shift) => {
+                      const dayKey = shift.date;
+                      acc[dayKey] ||= [] as Shift[];
+                      acc[dayKey].push(shift);
+                      return acc;
+                    }, {} as Record<string, Shift[]>))
+                      .sort(([a],[b]) => (a < b ? -1 : a > b ? 1 : 0))
+                      .map(([day, list]) => {
+                        const sortedShifts = [...list].sort((s1, s2) => minutesFromTime(s1.startTime) - minutesFromTime(s2.startTime));
+                        return [day, sortedShifts] as const;
+                      });
+                    return (
+                      <AccordionItem value={per.id} key={per.id} className="border rounded-md">
+                        <AccordionTrigger className="px-4 py-2 text-base font-semibold hover:no-underline">
+                          <div className="w-full flex items-center justify-between">
+                            <span className="truncate pr-2">{dateLabel}</span>
+                            <span className="text-sm text-muted-foreground flex items-baseline gap-1">
+                              <span className="text-foreground font-medium">{hours.toFixed(2)}</span>
+                              <span>Total Hours</span>
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="!pt-0 p-4">
+                          {dayGroups.length > 0 ? (
+                            <div className="space-y-4">
+                              {renderShiftGroups(dayGroups)}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No shifts recorded in this period.</p>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
               </div>
             )}
-            {(!showPeriods || selectedPeriodId) && (
+            {(
               shiftsGroupedByMonth.length > 1 ? (
                 <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
                   {shiftsGroupedByMonth.map(([month, dayGroups]) => (
@@ -641,31 +596,29 @@ export default function ProjectPage() {
                 </div>
               )
             )}
-            {(!showPeriods || selectedPeriodId) && activeShift && (
+            {activeShift && (
               <ActiveShiftCard activeShift={activeShift} onStop={() => endShift(activeShift.id)} />
             )}
           </div>
       </main>
-      
-      {(!showPeriods || selectedPeriodId) && (
-        <NewShiftDialog 
-          projectId={projectId} 
-          open={isShiftDialogOpen} 
-          onOpenChange={handleShiftDialogStateChange} 
-          shiftToEdit={shiftToEdit}
-          allShifts={allShifts}
-          activeShift={activeShift || null}
-          periodId={showPeriods ? selectedPeriodId : null}
+
+      <NewShiftDialog 
+        projectId={projectId} 
+        open={isShiftDialogOpen} 
+        onOpenChange={handleShiftDialogStateChange} 
+        shiftToEdit={shiftToEdit}
+        allShifts={allShifts}
+        activeShift={activeShift || null}
+        periodId={null}
+      >
+        <Button
+          size="icon"
+          className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
+          onClick={() => setIsShiftDialogOpen(true)}
         >
-          <Button
-            size="icon"
-            className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
-            onClick={() => setIsShiftDialogOpen(true)}
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </NewShiftDialog>
-      )}
+          <Plus className="h-6 w-6" />
+        </Button>
+      </NewShiftDialog>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
