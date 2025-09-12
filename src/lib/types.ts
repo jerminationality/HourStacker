@@ -5,6 +5,8 @@ export interface Project {
   createdAt?: string;
   // Whether the project is archived (hidden from the default list)
   archived?: boolean;
+  // Whether to show past consolidated periods on the project page (default true)
+  showPastPeriods?: boolean;
 }
 
 export interface Shift {

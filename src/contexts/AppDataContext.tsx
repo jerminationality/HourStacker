@@ -11,6 +11,7 @@ interface AppDataContextProps {
   shifts: Shift[];
   periods: Period[];
   activeShifts: ActiveShift[];
+  setProjectShowPastPeriods: (projectId: string, show: boolean) => void;
   addProject: (name: string) => void;
   updateProject: (updatedProject: Project) => void;
   deleteProject: (projectId: string) => void;
@@ -43,13 +44,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Backfill createdAt for legacy projects
   useEffect(() => {
     if (!isProjectsInitialized) return;
-  const needsBackfill = projects.some(p => !('createdAt' in p) || !p.createdAt || !('archived' in p));
+  const needsBackfill = projects.some(p => !('createdAt' in p) || !p.createdAt || !('archived' in p) || !('showPastPeriods' in p));
     if (needsBackfill) {
       const now = new Date().toISOString();
       setProjects(prev => prev.map(p => ({
         ...p,
         createdAt: p.createdAt ?? now,
     archived: p.archived ?? false,
+    showPastPeriods: p.showPastPeriods ?? true,
       })));
     }
   }, [isProjectsInitialized, projects, setProjects]);
@@ -151,12 +153,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     shifts,
   periods,
     activeShifts,
+    setProjectShowPastPeriods: (projectId: string, show: boolean) => {
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, showPastPeriods: show } : p))
+    },
     addProject: (name: string) => {
       const newProject: Project = {
         id: crypto.randomUUID(),
         name,
   createdAt: new Date().toISOString(),
     archived: false,
+    showPastPeriods: true,
       };
       setProjects(prev => [...prev, newProject]);
     },

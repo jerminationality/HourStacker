@@ -40,12 +40,24 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onPointerUp, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    // Prevent sticky :hover on touch devices by blurring after tap/click.
+    const handlePointerUp: React.PointerEventHandler<HTMLButtonElement> = (e) => {
+      try {
+        onPointerUp?.(e)
+      } finally {
+        // Blur on non-mouse pointers (touch/pen) unless default prevented
+        if (!e.defaultPrevented && e.pointerType !== 'mouse') {
+          ;(e.currentTarget as unknown as HTMLElement).blur()
+        }
+      }
+    }
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        onPointerUp={handlePointerUp}
         {...props}
       />
     )

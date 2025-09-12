@@ -74,3 +74,15 @@
   width: 2em;
   height: 2em;
 }
+
+/* Reduce sticky hover/tap highlight effects on touch devices */
+* { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) and (pointer: coarse) {
+  /* Neutralize hover-only color changes on touch to avoid "stuck" hover */
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    background-color: inherit !important;
+    color: inherit !important;
+  }
+}

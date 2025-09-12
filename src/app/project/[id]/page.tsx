@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useContext, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+// Link is already imported earlier in this file
 import { useAppData } from '@/contexts/AppDataContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { NewShiftDialog } from '@/components/NewShiftDialog';
 import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive, Layers } from 'lucide-react';
+import Link from 'next/link';
+// Removed tooltip for periods icon as periods are inline again
 import { format, parseISO } from 'date-fns';
 import type { Shift, Project, ActiveShift, Period } from '@/lib/types';
 import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime } from '@/lib/utils';
@@ -42,13 +44,14 @@ export default function ProjectPage() {
   const [isProjectDeleteAlertOpen, setIsProjectDeleteAlertOpen] = useState(false);
   const [dontAskAgain, setDontAskAgain] = useState(false);
   const [defaultAccordionValue, setDefaultAccordionValue] = useState<string[]>([]);
+  // No one-time tooltip needed when periods render inline
 
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
   const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete } = useSettings();
   const { 
-    getProjectById, 
+  getProjectById, 
     getShiftsByProjectId, 
     isInitialized, 
     deleteShift, 
@@ -63,6 +66,7 @@ export default function ProjectPage() {
     shifts: allShifts,
     periods,
     consolidateCurrentPeriod,
+  setProjectShowPastPeriods,
   } = useAppData();
   
   const projectIdRaw = (params as Record<string, string | string[]>)["id"];
@@ -284,58 +288,126 @@ export default function ProjectPage() {
     );
   }
 
-  const renderShiftGroups = (dayGroups: readonly (readonly [string, Shift[]])[]) => (
-    dayGroups.map(([groupName, groupShifts]) => (
-      <Card key={groupName}>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(groupName), "PPP")}
-            </div>
-            {groupShifts.length > 1 && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteGroupClick(groupName)}>
-                  <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-4">
-            {groupShifts.map((shift, index) => (
-              <li key={shift.id}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-foreground">{formatHours(shift.hours, hourFormat, false)}</p>
-                    {shift.startTime && shift.endTime && (
-                      <p className="text-sm text-muted-foreground flex items-center flex-wrap gap-2">
-                        <span>{formatShiftRange(shift.startTime, shift.endTime, timeFormat)}</span>
-                        {isOvernight(shift.startTime, shift.endTime) && (
-                          <span className="inline-flex items-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-[11px] font-medium tracking-wide">
-                            Overnight
-                          </span>
+  const renderShiftGroups = (
+    dayGroups: readonly (readonly [string, Shift[]])[],
+    opts?: { compact?: boolean }
+  ) => (
+    dayGroups.map(([groupName, groupShifts], idx) => {
+      const compact = !!opts?.compact;
+      if (compact) {
+        return (
+          <Card
+            key={groupName}
+            className="shadow-none border-y border-border rounded-none odd:bg-muted/40 even:bg-background"
+          >
+            <CardHeader className="py-2 px-4">
+              <CardTitle className="text-[13px] font-medium flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> {format(parseISO(groupName), "dd/MM/yyyy")}
+                </span>
+                {groupShifts.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive/70 hover:text-destructive"
+                    onClick={() => handleDeleteGroupClick(groupName)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2 pb-2 px-4">
+              <ul className="space-y-2">
+                {groupShifts.map((shift, index) => (
+                  <li key={shift.id}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{formatHours(shift.hours, hourFormat, false)}</p>
+                        {shift.startTime && shift.endTime && (
+                          <p className="text-[12px] text-muted-foreground flex items-center flex-wrap gap-2">
+                            <span>{formatShiftRange(shift.startTime, shift.endTime, timeFormat)}</span>
+                            {isOvernight(shift.startTime, shift.endTime) && (
+                              <span className="inline-flex items-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-medium tracking-wide">
+                                Overnight
+                              </span>
+                            )}
+                          </p>
                         )}
-                      </p>
-                    )}
-                    {shift.description && (
-                      <p className="text-sm text-muted-foreground pt-1 whitespace-pre-wrap">{shift.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditShiftClick(shift)}>
-                            <Edit className="h-4 w-4 icon-lg" />
+                        {shift.description && (
+                          <p className="text-[12px] text-muted-foreground pt-0.5 whitespace-pre-wrap">{shift.description}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditShiftClick(shift)}>
+                          <Edit className="h-3 w-3 icon-lg" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteShiftClick(shift)}>
-                            <Trash2 className="h-4 w-4 icon-lg" />
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteShiftClick(shift)}>
+                          <Trash2 className="h-3 w-3 icon-lg" />
                         </Button>
+                      </div>
+                    </div>
+                    {index < groupShifts.length - 1 && <Separator className="mt-2" />}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        );
+      }
+      // Default (non-compact): card presentation
+      return (
+        <Card key={groupName}>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(groupName), "PPP")}
+              </div>
+              {groupShifts.length > 1 && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteGroupClick(groupName)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-4">
+              {groupShifts.map((shift, index) => (
+                <li key={shift.id}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-foreground">{formatHours(shift.hours, hourFormat, false)}</p>
+                      {shift.startTime && shift.endTime && (
+                        <p className="text-sm text-muted-foreground flex items-center flex-wrap gap-2">
+                          <span>{formatShiftRange(shift.startTime, shift.endTime, timeFormat)}</span>
+                          {isOvernight(shift.startTime, shift.endTime) && (
+                            <span className="inline-flex items-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-[11px] font-medium tracking-wide">
+                              Overnight
+                            </span>
+                          )}
+                        </p>
+                      )}
+                      {shift.description && (
+                        <p className="text-sm text-muted-foreground pt-1 whitespace-pre-wrap">{shift.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditShiftClick(shift)}>
+                        <Edit className="h-4 w-4 icon-lg" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteShiftClick(shift)}>
+                        <Trash2 className="h-4 w-4 icon-lg" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                {index < groupShifts.length - 1 && <Separator className="mt-4" />}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    ))
+                  {index < groupShifts.length - 1 && <Separator className="mt-4" />}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      );
+    })
   );
 
   if (shifts.length === 0 && !activeShift && projectPeriods.length === 0) {
@@ -353,7 +425,7 @@ export default function ProjectPage() {
                               {hourFormat === 'decimal' ? (
                                 <div className="text-xl">
                                   {totalHours.toFixed(2)}
-                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> Current Hours</span>
+                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
                                 </div>
                               ) : (
                                 <HeaderContext.Provider value={true}>
@@ -390,7 +462,7 @@ export default function ProjectPage() {
                             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
                   <Edit className="mr-2 h-4 w-4" />
-                  <span>Edit</span>
+                  <span>Edit Project Name</span>
                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleExportToText}>
                                     <ClipboardCopy className="mr-2 h-4 w-4" />
@@ -405,7 +477,7 @@ export default function ProjectPage() {
                     </div>
                 </div>
             </header>
-            <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24 flex items-center justify-center">
+            <main className="flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 pt-2 sm:pt-3 pb-24 flex items-center justify-center">
                  <NewShiftDialog 
                     projectId={projectId} 
                     open={isShiftDialogOpen} 
@@ -446,7 +518,7 @@ export default function ProjectPage() {
                    {hourFormat === 'decimal' ? (
                       <div className="text-xl">
                         {totalHours.toFixed(2)}
-                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> Current Hours</span>
+                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
                       </div>
                    ) : (
                       <HeaderContext.Provider value={true}>
@@ -457,7 +529,7 @@ export default function ProjectPage() {
             </div>
           </div>
            <div className="flex items-center gap-2">
-              {/* No periods toggle; consolidated periods show above current shifts */}
+              {/* Past Periods are rendered inline below */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -483,11 +555,15 @@ export default function ProjectPage() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
                     <Edit className="mr-2 h-4 w-4" />
-                    <span>Edit</span>
+                    <span>Edit Project Name</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => consolidateCurrentPeriod(project.id)}>
                     <ClipboardCopy className="mr-2 h-4 w-4" />
                     <span>Consolidate Period</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => project && setProjectShowPastPeriods(project.id, !(project.showPastPeriods ?? true))}>
+                    <Layers className="mr-2 h-4 w-4" />
+                    <span>{(project.showPastPeriods ?? true) ? 'Hide Past Periods' : 'Show Past Periods'}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExportToText}>
                       <ClipboardCopy className="mr-2 h-4 w-4" />
@@ -516,16 +592,18 @@ export default function ProjectPage() {
         </div>
       </header>
 
-  <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24">
+  <main className="flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 pt-0 pb-24">
         <div className="space-y-6">
-            {projectPeriods.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-xl font-bold font-headline text-foreground">Past Periods</h2>
-                <Accordion type="multiple" className="w-full space-y-3">
+            {(project.showPastPeriods ?? true) && projectPeriods.length > 0 && (
+              <div>
+                <div className="-mx-4 sm:-mx-6">
+                  <Accordion
+                    type="multiple"
+                    className="w-full space-y-0 divide-y divide-border border-y border-border"
+                  >
                   {[...projectPeriods].reverse().map((per) => {
                     const periodShiftsForPer = allShifts.filter(s => s.projectId === projectId && s.periodId === per.id);
                     const hours = periodShiftsForPer.reduce((acc, s) => acc + s.hours, 0);
-                    // Build date label: single date or range
                     const uniqueDates = Array.from(new Set(periodShiftsForPer.map(s => s.date).filter(Boolean)));
                     let dateLabel: string;
                     if (uniqueDates.length === 0) {
@@ -538,7 +616,6 @@ export default function ProjectPage() {
                       const last = format(parseISO(sorted[sorted.length - 1]!), 'MM/dd/yyyy');
                       dateLabel = `${first} - ${last}`;
                     }
-                    // Group this period's shifts by day (ascending) for rendering
                     const dayGroups = Object.entries(periodShiftsForPer.reduce((acc, shift) => {
                       const dayKey = shift.date;
                       acc[dayKey] ||= [] as Shift[];
@@ -551,50 +628,87 @@ export default function ProjectPage() {
                         return [day, sortedShifts] as const;
                       });
                     return (
-                      <AccordionItem value={per.id} key={per.id} className="border rounded-md">
-                        <AccordionTrigger className="px-4 py-2 text-base font-semibold hover:no-underline">
+                      <AccordionItem value={per.id} key={per.id} className="border-0 odd:bg-muted/40 even:bg-background">
+                        <AccordionTrigger className="px-4 sm:px-6 py-2 text-base font-semibold hover:no-underline">
                           <div className="w-full flex items-center justify-between">
                             <span className="truncate pr-2">{dateLabel}</span>
-                            <span className="text-sm text-muted-foreground flex items-baseline gap-1">
-                              <span className="text-foreground font-medium">{hours.toFixed(2)}</span>
-                              <span>Total Hours</span>
-                            </span>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="!pt-0 p-4">
-                          {dayGroups.length > 0 ? (
-                            <div className="space-y-4">
-                              {renderShiftGroups(dayGroups)}
+                        <AccordionContent className="!pt-0 px-0 pb-4">
+                          {periodShiftsForPer.length > 0 ? (
+                            <div className="px-4 sm:px-6">
+                              <table className="w-full text-[13px] border-collapse">
+                                <tbody>
+                                  {[...periodShiftsForPer]
+                                    .filter(s => !!s.date)
+                                    .sort((a, b) => {
+                                      if (a.date! < b.date!) return -1;
+                                      if (a.date! > b.date!) return 1;
+                                      return minutesFromTime(a.startTime) - minutesFromTime(b.startTime);
+                                    })
+                                    .map((shift) => {
+                                      const dateCell = format(parseISO(shift.date!), 'dd/MM/yyyy');
+                                      const inCell = shift.startTime ? formatTime(shift.startTime, timeFormat) : '—';
+                                      const outCell = shift.endTime ? formatTime(shift.endTime, timeFormat) : '—';
+                                      const totalMinutes = Math.round(shift.hours * 60);
+                                      const h = Math.floor(totalMinutes / 60);
+                                      const m = totalMinutes % 60;
+                                      const descriptive = h > 0 ? `${h} ${h > 1 ? 'hours' : 'hour'}${m > 0 ? `, ${m} ${m > 1 ? 'minutes' : 'minute'}` : ''}` : `${m} ${m > 1 ? 'minutes' : 'minute'}`;
+                                      const hoursText = hourFormat === 'decimal' ? shift.hours.toFixed(2) : (hourFormat === 'hhmm' ? descriptive : `${shift.hours.toFixed(2)} (${descriptive})`);
+                                      return (
+                                        <tr key={shift.id} className="odd:bg-muted/40">
+                                          <td className="py-2 pr-2 whitespace-nowrap align-middle">{dateCell}</td>
+                                          <td className="py-2 px-2 whitespace-nowrap align-middle">{inCell} – {outCell}</td>
+                                          <td className="py-2 px-2 whitespace-nowrap align-middle text-right">{hoursText}</td>
+                                          <td className="py-2 pl-2 whitespace-nowrap align-middle text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditShiftClick(shift)}>
+                                                <Edit className="h-3 w-3 icon-lg" />
+                                              </Button>
+                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteShiftClick(shift)}>
+                                                <Trash2 className="h-3 w-3 icon-lg" />
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                </tbody>
+                              </table>
                             </div>
                           ) : (
-                            <p className="text-sm text-muted-foreground">No shifts recorded in this period.</p>
+                            <p className="text-sm text-muted-foreground px-4 sm:px-6">No shifts recorded in this period.</p>
                           )}
                         </AccordionContent>
                       </AccordionItem>
                     );
                   })}
-                </Accordion>
+                  </Accordion>
+                </div>
               </div>
             )}
-            {(
-              shiftsGroupedByMonth.length > 1 ? (
-                <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
-                  {shiftsGroupedByMonth.map(([month, dayGroups]) => (
-                    <AccordionItem value={month} key={month} className="border-none">
-                      <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
-                        {format(parseISO(month), "MMMM yyyy")}
-                      </AccordionTrigger>
-                      <AccordionContent className="!pt-4 space-y-4">
-                        {renderShiftGroups(dayGroups)}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : (
-                <div className="space-y-4">
-                  {shiftsGroupedByMonth.flatMap(([, dayGroups]) => renderShiftGroups(dayGroups))}
-                </div>
-              )
+            {shiftsGroupedByMonth.length > 0 && (
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
+                {shiftsGroupedByMonth.length > 1 ? (
+                  <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
+                    {shiftsGroupedByMonth.map(([month, dayGroups]) => (
+                      <AccordionItem value={month} key={month} className="border-none">
+                        <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
+                          {format(parseISO(month), "MMMM yyyy")}
+                        </AccordionTrigger>
+                        <AccordionContent className="!pt-4 space-y-4">
+                          {renderShiftGroups(dayGroups)}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <div className="space-y-4">
+                    {shiftsGroupedByMonth.flatMap(([, dayGroups]) => renderShiftGroups(dayGroups))}
+                  </div>
+                )}
+              </div>
             )}
             {activeShift && (
               <ActiveShiftCard activeShift={activeShift} onStop={() => endShift(activeShift.id)} />
