@@ -35,7 +35,7 @@ export default function ProjectPeriodsPage() {
       <Card key={day}>
         <CardHeader>
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(day), "PPP")}
+            <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(day), "MM/dd/yyyy")}
           </CardTitle>
         </CardHeader>
         <CardContent>
