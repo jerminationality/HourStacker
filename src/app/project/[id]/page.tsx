@@ -49,7 +49,7 @@ export default function ProjectPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete } = useSettings();
+  const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete, showTotalProjectHoursOnCards } = useSettings();
   const { 
   getProjectById, 
     getShiftsByProjectId, 
@@ -423,14 +423,36 @@ export default function ProjectPage() {
                             <h1 className="text-xl sm:text-2xl font-bold text-foreground font-headline">{project.name}</h1>
                             <div className="font-bold text-foreground">
                               {hourFormat === 'decimal' ? (
-                                <div className="text-xl">
-                                  {totalHours.toFixed(2)}
-                                  <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
+                                <div className="text-xl flex items-center gap-3">
+                                  <span>
+                                    {totalHours.toFixed(2)}
+                                    <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
+                                  </span>
+                                  {showTotalProjectHoursOnCards && (
+                                    <span className="flex items-center gap-3">
+                                      <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
+                                      <span className="text-lg font-normal text-muted-foreground/80">
+                                        <span className="font-bold text-foreground">{allProjectHours.toFixed(2)}</span>
+                                        <span className="ml-1.5 text-sm font-normal"> Total Project Hours</span>
+                                      </span>
+                                    </span>
+                                  )}
                                 </div>
                               ) : (
-                                <HeaderContext.Provider value={true}>
-                                  {formatHours(totalHours, hourFormat, true)}
-                                </HeaderContext.Provider>
+                                <div className="flex items-center gap-3">
+                                  <HeaderContext.Provider value={true}>
+                                    {formatHours(totalHours, hourFormat, true)}
+                                  </HeaderContext.Provider>
+                                  {showTotalProjectHoursOnCards && (
+                                    <span className="flex items-center gap-3">
+                                      <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
+                                      <span className="text-lg font-normal text-muted-foreground/80">
+                                        <span className="font-bold text-foreground">{allProjectHours.toFixed(2)}</span>
+                                        <span className="ml-1.5 text-sm font-normal"> Total Project Hours</span>
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                         </div>
@@ -516,14 +538,36 @@ export default function ProjectPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground font-headline">{project.name}</h1>
                  <div className="font-bold text-foreground">
                    {hourFormat === 'decimal' ? (
-                      <div className="text-xl">
-                        {totalHours.toFixed(2)}
-                        <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
+                      <div className="text-xl flex items-center gap-3">
+                        <span>
+                          {totalHours.toFixed(2)}
+                          <span className="ml-1.5 text-base font-normal text-muted-foreground"> Hours</span>
+                        </span>
+                        {showTotalProjectHoursOnCards && (
+                          <span className="flex items-center gap-3">
+                            <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
+                            <span className="text-lg font-normal text-muted-foreground/80">
+                              <span className="font-bold text-foreground">{allProjectHours.toFixed(2)}</span>
+                              <span className="ml-1.5 text-sm font-normal"> Total Project Hours</span>
+                            </span>
+                          </span>
+                        )}
                       </div>
                    ) : (
-                      <HeaderContext.Provider value={true}>
-                        {formatHours(totalHours, hourFormat, true)}
-                      </HeaderContext.Provider>
+                      <div className="flex items-center gap-3">
+                        <HeaderContext.Provider value={true}>
+                          {formatHours(totalHours, hourFormat, true)}
+                        </HeaderContext.Provider>
+                        {showTotalProjectHoursOnCards && (
+                          <span className="flex items-center gap-3">
+                            <span className="inline-block w-px h-5 bg-border" aria-hidden="true"></span>
+                            <span className="text-lg font-normal text-muted-foreground/80">
+                              <span className="font-bold text-foreground">{allProjectHours.toFixed(2)}</span>
+                              <span className="ml-1.5 text-sm font-normal"> Total Project Hours</span>
+                            </span>
+                          </span>
+                        )}
+                      </div>
                    )}
                  </div>
             </div>
@@ -592,7 +636,7 @@ export default function ProjectPage() {
         </div>
       </header>
 
-  <main className="flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 pt-0 pb-24">
+  <main className={`flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 ${(project.showPastPeriods ?? true) ? 'pt-0' : 'pt-2 sm:pt-3'} pb-24`}>
         <div className="space-y-6">
             {(project.showPastPeriods ?? true) && projectPeriods.length > 0 && (
               <div>
@@ -647,7 +691,7 @@ export default function ProjectPage() {
                                       return minutesFromTime(a.startTime) - minutesFromTime(b.startTime);
                                     })
                                     .map((shift) => {
-                                      const dateCell = format(parseISO(shift.date!), 'dd/MM/yyyy');
+                                      const dateCell = format(parseISO(shift.date!), 'MM/dd/yyyy');
                                       const inCell = shift.startTime ? formatTime(shift.startTime, timeFormat) : '—';
                                       const outCell = shift.endTime ? formatTime(shift.endTime, timeFormat) : '—';
                                       const totalMinutes = Math.round(shift.hours * 60);
@@ -689,7 +733,9 @@ export default function ProjectPage() {
             )}
             {shiftsGroupedByMonth.length > 0 && (
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
+                {(project.showPastPeriods ?? true) && (
+                  <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
+                )}
                 {shiftsGroupedByMonth.length > 1 ? (
                   <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
                     {shiftsGroupedByMonth.map(([month, dayGroups]) => (
