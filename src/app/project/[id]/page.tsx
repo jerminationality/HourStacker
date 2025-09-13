@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { NewShiftDialog } from '@/components/NewShiftDialog';
-import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive, Layers } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Edit, Trash2, MoreVertical, Clock, ClipboardCopy, ArchiveRestore, Archive, Layers, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 // Removed tooltip for periods icon as periods are inline again
 import { format, parseISO } from 'date-fns';
@@ -33,6 +33,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
 
 export default function ProjectPage() {
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function ProjectPage() {
   const [shiftToEdit, setShiftToEdit] = useState<Shift | null>(null);
   const [shiftToDelete, setShiftToDelete] = useState<Shift | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
+  const [periodToDelete, setPeriodToDelete] = useState<Period | null>(null);
   const [isProjectDeleteAlertOpen, setIsProjectDeleteAlertOpen] = useState(false);
   const [dontAskAgain, setDontAskAgain] = useState(false);
   const [defaultAccordionValue, setDefaultAccordionValue] = useState<string[]>([]);
@@ -66,6 +68,8 @@ export default function ProjectPage() {
     shifts: allShifts,
     periods,
     consolidateCurrentPeriod,
+    revertPeriod,
+    deletePeriod,
   setProjectShowPastPeriods,
   } = useAppData();
   
@@ -605,10 +609,12 @@ export default function ProjectPage() {
                     <ClipboardCopy className="mr-2 h-4 w-4" />
                     <span>Consolidate Period</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => project && setProjectShowPastPeriods(project.id, !(project.showPastPeriods ?? true))}>
-                    <Layers className="mr-2 h-4 w-4" />
-                    <span>{(project.showPastPeriods ?? true) ? 'Hide Past Periods' : 'Show Past Periods'}</span>
-                  </DropdownMenuItem>
+                  {projectPeriods.length > 0 && (
+                    <DropdownMenuItem onClick={() => project && setProjectShowPastPeriods(project.id, !(project.showPastPeriods ?? true))}>
+                      <Layers className="mr-2 h-4 w-4" />
+                      <span>{(project.showPastPeriods ?? true) ? 'Hide Past Periods' : 'Show Past Periods'}</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleExportToText}>
                       <ClipboardCopy className="mr-2 h-4 w-4" />
                       <span>Export to Text</span>
@@ -636,9 +642,9 @@ export default function ProjectPage() {
         </div>
       </header>
 
-  <main className={`flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 ${(project.showPastPeriods ?? true) ? 'pt-0' : 'pt-2 sm:pt-3'} pb-24`}>
+  <main className={`flex-1 w-full max-w-[512px] mx-auto px-4 sm:px-6 ${((project.showPastPeriods ?? true) && projectPeriods.length > 0) ? 'pt-0' : 'pt-2 sm:pt-3'} pb-24`}>
         <div className="space-y-6">
-            {(project.showPastPeriods ?? true) && projectPeriods.length > 0 && (
+            {((project.showPastPeriods ?? true) && projectPeriods.length > 0) && (
               <div>
                 <div className="-mx-4 sm:-mx-6">
                   <Accordion
@@ -673,11 +679,70 @@ export default function ProjectPage() {
                       });
                     return (
                       <AccordionItem value={per.id} key={per.id} className="border-0 odd:bg-muted/40 even:bg-background">
-                        <AccordionTrigger className="px-4 sm:px-6 py-2 text-base font-semibold hover:no-underline">
-                          <div className="w-full flex items-center justify-between">
-                            <span className="truncate pr-2">{dateLabel}</span>
-                          </div>
-                        </AccordionTrigger>
+                        <AccordionPrimitive.Header className="flex items-center">
+                          <AccordionPrimitive.Trigger className="group flex flex-1 items-center justify-between px-4 sm:px-6 py-2 text-base font-semibold hover:no-underline">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                              <span className="truncate pr-2">{dateLabel}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground flex items-baseline gap-1">
+                              <span className="text-foreground font-medium">{hours.toFixed(2)}</span>
+                            </span>
+                          </AccordionPrimitive.Trigger>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="px-3 py-2 text-foreground/80 hover:text-foreground"
+                                aria-label="Period actions"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  try {
+                                    const lines: string[] = [];
+                                    lines.push(`${project.name} — ${dateLabel}`);
+                                    lines.push('--------------------');
+                                    const sorted = [...periodShiftsForPer]
+                                      .filter(s => !!s.date)
+                                      .sort((a, b) => {
+                                        if (a.date! < b.date!) return -1;
+                                        if (a.date! > b.date!) return 1;
+                                        return minutesFromTime(a.startTime) - minutesFromTime(b.startTime);
+                                      });
+                                    let lastDay = '';
+                                    for (const s of sorted) {
+                                      if (s.date !== lastDay) {
+                                        lines.push('');
+                                        lines.push(format(parseISO(s.date!), 'MMMM do, yyyy'));
+                                        lastDay = s.date!;
+                                      }
+                                      lines.push(`  ${s.startTime ?? '—'} – ${s.endTime ?? '—'}`);
+                                      lines.push(`  ${s.hours.toFixed(2)} hours`);
+                                      if (s.description) lines.push(`  Description: ${s.description}`);
+                                    }
+                                    const text = lines.join('\n').trim();
+                                    navigator.clipboard.writeText(text);
+                                  } catch {}
+                                }}
+                              >
+                                <ClipboardCopy className="mr-2 h-4 w-4" />
+                                <span>Export to Text</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => project && revertPeriod(project.id, per.id)}>
+                                <ArchiveRestore className="mr-2 h-4 w-4" />
+                                <span>Revert to Current Shifts</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => setPeriodToDelete(per)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete Period</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </AccordionPrimitive.Header>
                         <AccordionContent className="!pt-0 px-0 pb-4">
                           {periodShiftsForPer.length > 0 ? (
                             <div className="px-4 sm:px-6">
@@ -733,7 +798,7 @@ export default function ProjectPage() {
             )}
             {shiftsGroupedByMonth.length > 0 && (
               <div className="space-y-1">
-                {(project.showPastPeriods ?? true) && (
+                {((project.showPastPeriods ?? true) && projectPeriods.length > 0) && (
                   <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
                 )}
                 {shiftsGroupedByMonth.length > 1 ? (
@@ -827,6 +892,26 @@ export default function ProjectPage() {
                   <AlertDialogAction onClick={confirmDeleteProject}>Delete Project</AlertDialogAction>
               </AlertDialogFooter>
           </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={!!periodToDelete} onOpenChange={(open: boolean) => !open && setPeriodToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Period?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this period and all of its shifts.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (project && periodToDelete) {
+                deletePeriod(project.id, periodToDelete.id);
+                setPeriodToDelete(null);
+              }
+            }}>Delete Period</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );

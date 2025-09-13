@@ -18,6 +18,8 @@ interface AppDataContextProps {
   archiveProject: (projectId: string) => void;
   unarchiveProject: (projectId: string) => void;
   consolidateCurrentPeriod: (projectId: string, periodName?: string) => void;
+  revertPeriod: (projectId: string, periodId: string) => void;
+  deletePeriod: (projectId: string, periodId: string) => void;
   addShift: (shiftData: Omit<Shift, 'id'>) => void;
   updateShift: (updatedShift: Shift) => void;
   deleteShift: (shiftId: string) => void;
@@ -189,6 +191,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPeriods(prev => [...prev, newPeriod]);
       // Assign all current active-period shifts (those without periodId) to this new period
       setShifts(prev => prev.map(s => s.projectId === projectId && !s.periodId ? { ...s, periodId: id } : s));
+    },
+    revertPeriod: (projectId: string, periodId: string) => {
+      // Move shifts from the given period back to current by removing periodId, then remove the period
+      setShifts(prev => prev.map(s => {
+        if (s.projectId === projectId && s.periodId === periodId) {
+          const { periodId: _omit, ...rest } = s as Required<Shift> & Shift;
+          return rest as Shift;
+        }
+        return s;
+      }));
+      setPeriods(prev => prev.filter(p => !(p.projectId === projectId && p.id === periodId)));
+    },
+    deletePeriod: (projectId: string, periodId: string) => {
+      // Delete the period and all its shifts
+      setShifts(prev => prev.filter(s => !(s.projectId === projectId && s.periodId === periodId)));
+      setPeriods(prev => prev.filter(p => !(p.projectId === projectId && p.id === periodId)));
     },
     addShift: (shiftData: Omit<Shift, 'id'>) => {
       const newShift: Shift = {
