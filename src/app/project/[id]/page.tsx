@@ -769,10 +769,10 @@ export default function ProjectPage() {
                                       const hoursText = hourFormat === 'decimal' ? shift.hours.toFixed(2) : (hourFormat === 'hhmm' ? descriptive : `${shift.hours.toFixed(2)} (${descriptive})`);
                                       return (
                                         <tr key={shift.id} className={`${gIdx % 2 === 0 ? 'bg-muted/40' : 'bg-background'}`}>
-                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} pr-2 whitespace-nowrap align-middle`}>{idx === 0 ? format(parseISO(day), 'MM/dd/yyyy') : ''}</td>
-                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} px-2 whitespace-nowrap align-middle`}>{inCell} – {outCell}</td>
-                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} px-2 whitespace-nowrap align-middle text-right`}>{hoursText}</td>
-                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} pl-2 whitespace-nowrap align-middle text-right`}>
+                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} pr-2 whitespace-nowrap align-middle`}>{idx === 0 ? format(parseISO(day), 'MM/dd/yyyy') : ''}</td>
+                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} px-2 whitespace-nowrap align-middle`}>{inCell} – {outCell}</td>
+                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} px-2 whitespace-nowrap align-middle text-right`}>{hoursText}</td>
+                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} pl-2 whitespace-nowrap align-middle text-right`}>
                                             <div className="flex items-center justify-end gap-1">
                                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditShiftClick(shift)}>
                                                 <Edit className="h-3 w-3 icon-lg" />
