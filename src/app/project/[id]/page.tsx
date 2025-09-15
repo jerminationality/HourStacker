@@ -758,15 +758,8 @@ export default function ProjectPage() {
                             <div className="px-4 sm:px-6">
                               <table className="w-full text-[13px] border-collapse">
                                 <tbody>
-                                  {[...periodShiftsForPer]
-                                    .filter(s => !!s.date)
-                                    .sort((a, b) => {
-                                      if (a.date! < b.date!) return -1;
-                                      if (a.date! > b.date!) return 1;
-                                      return minutesFromTime(a.startTime) - minutesFromTime(b.startTime);
-                                    })
-                                    .map((shift) => {
-                                      const dateCell = format(parseISO(shift.date!), 'MM/dd/yyyy');
+                                  {dayGroups.map(([day, list], gIdx) => (
+                                    list.map((shift, idx) => {
                                       const inCell = shift.startTime ? formatTime(shift.startTime, timeFormat) : '—';
                                       const outCell = shift.endTime ? formatTime(shift.endTime, timeFormat) : '—';
                                       const totalMinutes = Math.round(shift.hours * 60);
@@ -775,11 +768,11 @@ export default function ProjectPage() {
                                       const descriptive = h > 0 ? `${h} ${h > 1 ? 'hours' : 'hour'}${m > 0 ? `, ${m} ${m > 1 ? 'minutes' : 'minute'}` : ''}` : `${m} ${m > 1 ? 'minutes' : 'minute'}`;
                                       const hoursText = hourFormat === 'decimal' ? shift.hours.toFixed(2) : (hourFormat === 'hhmm' ? descriptive : `${shift.hours.toFixed(2)} (${descriptive})`);
                                       return (
-                                        <tr key={shift.id} className="odd:bg-muted/40">
-                                          <td className="py-2 pr-2 whitespace-nowrap align-middle">{dateCell}</td>
-                                          <td className="py-2 px-2 whitespace-nowrap align-middle">{inCell} – {outCell}</td>
-                                          <td className="py-2 px-2 whitespace-nowrap align-middle text-right">{hoursText}</td>
-                                          <td className="py-2 pl-2 whitespace-nowrap align-middle text-right">
+                                        <tr key={shift.id} className={`${gIdx % 2 === 0 ? 'bg-muted/40' : 'bg-background'}`}>
+                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} pr-2 whitespace-nowrap align-middle`}>{idx === 0 ? format(parseISO(day), 'MM/dd/yyyy') : ''}</td>
+                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} px-2 whitespace-nowrap align-middle`}>{inCell} – {outCell}</td>
+                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} px-2 whitespace-nowrap align-middle text-right`}>{hoursText}</td>
+                                          <td className={`${idx === 0 ? 'py-2' : 'py-1'} pl-2 whitespace-nowrap align-middle text-right`}>
                                             <div className="flex items-center justify-end gap-1">
                                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditShiftClick(shift)}>
                                                 <Edit className="h-3 w-3 icon-lg" />
@@ -791,7 +784,8 @@ export default function ProjectPage() {
                                           </td>
                                         </tr>
                                       );
-                                    })}
+                                    })
+                                  ))}
                                 </tbody>
                               </table>
                             </div>
