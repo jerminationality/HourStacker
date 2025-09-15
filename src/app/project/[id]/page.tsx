@@ -651,7 +651,7 @@ export default function ProjectPage() {
                     type="multiple"
                     className="w-full space-y-0 divide-y divide-border border-y border-border"
                   >
-                  {[...projectPeriods].reverse().map((per) => {
+                  {[...projectPeriods].map((per) => {
                     const periodShiftsForPer = allShifts.filter(s => s.projectId === projectId && s.periodId === per.id);
                     const hours = periodShiftsForPer.reduce((acc, s) => acc + s.hours, 0);
                     const uniqueDates = Array.from(new Set(periodShiftsForPer.map(s => s.date).filter(Boolean)));
