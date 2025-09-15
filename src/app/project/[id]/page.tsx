@@ -725,8 +725,18 @@ export default function ProjectPage() {
                                       if (s.description) lines.push(`  Description: ${s.description}`);
                                     }
                                     const text = lines.join('\n').trim();
-                                    navigator.clipboard.writeText(text);
-                                  } catch {}
+                                    navigator.clipboard.writeText(text)
+                                      .then(() => {
+                                        toast({ title: 'Copied to clipboard!' });
+                                      })
+                                      .catch((err) => {
+                                        console.error('Failed to copy text: ', err);
+                                        toast({ title: 'Failed to copy text', description: 'Could not copy text to clipboard.', variant: 'destructive' });
+                                      });
+                                  } catch (err) {
+                                    console.error('Export error:', err);
+                                    toast({ title: 'Export failed', description: 'An error occurred while preparing the export.', variant: 'destructive' });
+                                  }
                                 }}
                               >
                                 <ClipboardCopy className="mr-2 h-4 w-4" />
