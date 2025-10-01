@@ -19,6 +19,8 @@ interface SettingsContextProps {
   setConfirmDeleteShift: (confirm: boolean) => void;
   showTotalProjectHoursOnCards: boolean;
   setShowTotalProjectHoursOnCards: (show: boolean) => void;
+  roundTotalsToQuarterHours: boolean;
+  setRoundTotalsToQuarterHours: (round: boolean) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   isInitialized: boolean;
@@ -35,6 +37,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [hourFormat, setHourFormat, isHourFormatInitialized] = useLocalStorage<HourFormat>('hourFormat', 'decimal');
   const [confirmDeleteShift, setConfirmDeleteShift, isConfirmDeleteShiftInitialized] = useLocalStorage<boolean>('confirmDeleteShift', true);
   const [showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, isShowTotalProjectHoursOnCardsInitialized] = useLocalStorage<boolean>('showTotalProjectHoursOnCards', false);
+  const [roundTotalsToQuarterHours, setRoundTotalsToQuarterHours, isRoundTotalsInit] = useLocalStorage<boolean>('roundTotalsToQuarterHours', false);
   const [theme, setTheme, isThemeInitialized] = useLocalStorage<Theme>('theme', 'light');
   const [projectSortBy, setProjectSortBy, isSortByInit] = useLocalStorage<ProjectSortBy>('projectSortBy', 'name');
   const [projectSortDir, setProjectSortDir, isSortDirInit] = useLocalStorage<SortDir>('projectSortDir', 'asc');
@@ -43,7 +46,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     isTimeFormatInitialized && 
     isHourFormatInitialized && 
     isConfirmDeleteShiftInitialized && 
-    isShowTotalProjectHoursOnCardsInitialized &&
+  isShowTotalProjectHoursOnCardsInitialized &&
+  isRoundTotalsInit &&
     isThemeInitialized && 
     isSortByInit && 
     isSortDirInit;
@@ -57,6 +61,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setConfirmDeleteShift,
     showTotalProjectHoursOnCards,
     setShowTotalProjectHoursOnCards,
+    roundTotalsToQuarterHours,
+    setRoundTotalsToQuarterHours,
     isInitialized,
     theme,
     setTheme,
@@ -64,7 +70,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setProjectSortBy,
     projectSortDir,
     setProjectSortDir,
-  }), [timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, isInitialized, theme, setTheme, projectSortBy, setProjectSortBy, projectSortDir, setProjectSortDir]);
+  }), [timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, roundTotalsToQuarterHours, setRoundTotalsToQuarterHours, isInitialized, theme, setTheme, projectSortBy, setProjectSortBy, projectSortDir, setProjectSortDir]);
 
   return (
     <SettingsContext.Provider value={contextValue}>

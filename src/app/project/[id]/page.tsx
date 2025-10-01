@@ -15,7 +15,7 @@ import Link from 'next/link';
 // Removed tooltip for periods icon as periods are inline again
 import { format, parseISO } from 'date-fns';
 import type { Shift, Project, ActiveShift, Period } from '@/lib/types';
-import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime } from '@/lib/utils';
+import { formatHours, formatTime, HeaderContext, formatHoursForExport, formatShiftRange, isOvernight, minutesFromTime, maybeRoundHours } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +51,7 @@ export default function ProjectPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete, showTotalProjectHoursOnCards } = useSettings();
+  const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete, showTotalProjectHoursOnCards, roundTotalsToQuarterHours } = useSettings();
   const { 
   getProjectById, 
     getShiftsByProjectId, 
@@ -219,12 +219,14 @@ export default function ProjectPage() {
   }, [monthCount]);
   
   const totalHours = useMemo(() => {
-    return viewedShifts.reduce((acc, shift) => acc + shift.hours, 0);
-  }, [viewedShifts]);
+    const sum = viewedShifts.reduce((acc, shift) => acc + shift.hours, 0);
+    return maybeRoundHours(sum, roundTotalsToQuarterHours);
+  }, [viewedShifts, roundTotalsToQuarterHours]);
   // Total across all periods + unconsolidated shifts for this project
   const allProjectHours = useMemo(() => {
-    return allShifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0);
-  }, [allShifts, projectId]);
+    const sum = allShifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0);
+    return maybeRoundHours(sum, roundTotalsToQuarterHours);
+  }, [allShifts, projectId, roundTotalsToQuarterHours]);
 
   // Auto-scroll to bottom when there is an active shift (on open or when starting)
   useEffect(() => {
@@ -299,6 +301,7 @@ export default function ProjectPage() {
     dayGroups.map(([groupName, groupShifts], idx) => {
       const compact = !!opts?.compact;
       if (compact) {
+        const dayTotal = maybeRoundHours(groupShifts.reduce((acc, s) => acc + s.hours, 0), roundTotalsToQuarterHours);
         return (
           <Card
             key={groupName}
@@ -309,16 +312,19 @@ export default function ProjectPage() {
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> {format(parseISO(groupName), "dd/MM/yyyy")}
                 </span>
-                {groupShifts.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-destructive/70 hover:text-destructive"
-                    onClick={() => handleDeleteGroupClick(groupName)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
+                <span className="flex items-center gap-2">
+                  <span className="text-[13px] text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                  {groupShifts.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive/70 hover:text-destructive"
+                      onClick={() => handleDeleteGroupClick(groupName)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-2 pb-2 px-4">
@@ -360,6 +366,7 @@ export default function ProjectPage() {
         );
       }
       // Default (non-compact): card presentation
+      const dayTotal = maybeRoundHours(groupShifts.reduce((acc, s) => acc + s.hours, 0), roundTotalsToQuarterHours);
       return (
         <Card key={groupName}>
           <CardHeader>
@@ -367,11 +374,14 @@ export default function ProjectPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(groupName), "PPP")}
               </div>
-              {groupShifts.length > 1 && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteGroupClick(groupName)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-lg text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                {groupShifts.length > 1 && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteGroupClick(groupName)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -686,7 +696,7 @@ export default function ProjectPage() {
                               <span className="truncate pr-2">{dateLabel}</span>
                             </div>
                             <span className="text-sm text-muted-foreground flex items-baseline gap-1">
-                              <span className="text-foreground font-medium">{hours.toFixed(2)}</span>
+                              <span className="text-foreground font-medium">{maybeRoundHours(hours, roundTotalsToQuarterHours).toFixed(2)}</span>
                             </span>
                           </AccordionPrimitive.Trigger>
                           <DropdownMenu>
@@ -760,6 +770,7 @@ export default function ProjectPage() {
                                 <tbody>
                                   {dayGroups.map(([day, list], gIdx) => (
                                     list.map((shift, idx) => {
+                                      const dayTotal = maybeRoundHours(list.reduce((acc, s) => acc + s.hours, 0), roundTotalsToQuarterHours);
                                       const inCell = shift.startTime ? formatTime(shift.startTime, timeFormat) : '—';
                                       const outCell = shift.endTime ? formatTime(shift.endTime, timeFormat) : '—';
                                       const totalMinutes = Math.round(shift.hours * 60);
@@ -769,7 +780,14 @@ export default function ProjectPage() {
                                       const hoursText = hourFormat === 'decimal' ? shift.hours.toFixed(2) : (hourFormat === 'hhmm' ? descriptive : `${shift.hours.toFixed(2)} (${descriptive})`);
                                       return (
                                         <tr key={shift.id} className={`${gIdx % 2 === 0 ? 'bg-muted/40' : 'bg-background'}`}>
-                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} pr-2 whitespace-nowrap align-middle`}>{idx === 0 ? format(parseISO(day), 'MM/dd/yyyy') : ''}</td>
+                                          <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} pr-2 whitespace-nowrap align-middle`}>
+                                            {idx === 0 ? (
+                                              <div className="flex items-center justify-between gap-3">
+                                                <span>{format(parseISO(day), 'MM/dd/yyyy')}</span>
+                                                <span className="text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                                              </div>
+                                            ) : ''}
+                                          </td>
                                           <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} px-2 whitespace-nowrap align-middle`}>{inCell} – {outCell}</td>
                                           <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} px-2 whitespace-nowrap align-middle text-right`}>{hoursText}</td>
                                           <td className={`${idx === 0 ? 'pt-2 pb-1' : 'py-1'} pl-2 whitespace-nowrap align-middle text-right`}>

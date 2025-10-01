@@ -55,6 +55,15 @@ export function formatHours(hours: number, format: 'decimal' | 'hhmm' | 'both', 
 
 export const HeaderContext = React.createContext(false);
 
+export function roundToQuarterHour(hours: number): number {
+  // Always round UP to the next 1/4 hour increment
+  return Math.ceil(hours / 0.25) * 0.25;
+}
+
+export function maybeRoundHours(hours: number, round: boolean): number {
+  return round ? roundToQuarterHour(hours) : hours;
+}
+
 export function formatHoursForExport(hours: number, indent: number = 0, singleLine: boolean = false): string {
     const spaces = ' '.repeat(indent);
     const decimalSuffix = singleLine ? 'hours' : 'Total Hours';

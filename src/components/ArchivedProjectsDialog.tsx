@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAppData } from "@/contexts/AppDataContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatHours } from "@/lib/utils";
+import { formatHours, maybeRoundHours } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 
 interface ArchivedProjectsDialogProps {
@@ -14,11 +14,14 @@ interface ArchivedProjectsDialogProps {
 
 export function ArchivedProjectsDialog({ open, onOpenChange }: ArchivedProjectsDialogProps) {
   const { projects, shifts } = useAppData();
-  const { hourFormat } = useSettings();
+  const { hourFormat, roundTotalsToQuarterHours } = useSettings();
   const archived = projects.filter(p => p.archived);
 
   const getProjectTotalHours = (projectId: string) =>
-    shifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0);
+    maybeRoundHours(
+      shifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0),
+      roundTotalsToQuarterHours
+    );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

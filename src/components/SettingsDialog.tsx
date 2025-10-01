@@ -26,19 +26,19 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogProps) {
     const { theme, setTheme } = useTheme();
-    const { timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards } = useSettings();
+    const { timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, roundTotalsToQuarterHours, setRoundTotalsToQuarterHours } = useSettings();
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] pb-1">
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                     <DialogDescription>
                         Customize the look and feel of the app.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-6 py-4">
+                <div className="grid gap-6 pt-4 pb-1">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
                         <Switch
@@ -80,7 +80,19 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                         </RadioGroup>
                     </div>
                      <Separator />
-                     <div className="flex items-center justify-between">
+                    {/* Rounding first among boolean toggles */}
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <Label htmlFor="round-quarter" className="text-base">Round totals up to next 1/4 hour</Label>
+                            <p className="text-sm text-muted-foreground">Always rounds up. Applies to totals and exports; individual shift entries remain exact.</p>
+                        </div>
+                        <Switch
+                            id="round-quarter"
+                            checked={roundTotalsToQuarterHours}
+                            onCheckedChange={setRoundTotalsToQuarterHours}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <Label htmlFor="confirm-delete" className="text-base">Confirm Shift Deletion</Label>
                             <p className="text-sm text-muted-foreground">Show a confirmation dialog before deleting a single shift.</p>
@@ -101,6 +113,10 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                             checked={showTotalProjectHoursOnCards}
                             onCheckedChange={setShowTotalProjectHoursOnCards}
                         />
+                    </div>
+                    {/* Version label */}
+                    <div className="flex justify-end">
+                        <span className="text-xs text-muted-foreground">Build version 0.9</span>
                     </div>
                 </div>
             </DialogContent>

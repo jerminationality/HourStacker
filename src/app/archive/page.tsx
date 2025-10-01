@@ -14,13 +14,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import type { Project, Shift } from "@/lib/types";
-import { formatHours, formatHoursForExport, formatShiftRange } from "@/lib/utils";
+import { formatHours, formatHoursForExport, formatShiftRange, maybeRoundHours } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ArchivePage() {
   const { projects, shifts, deleteProject, archiveProject, unarchiveProject, getShiftsByProjectId } = useAppData();
-  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir } = useSettings();
+  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir, roundTotalsToQuarterHours } = useSettings();
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -44,7 +44,10 @@ export default function ArchivePage() {
     return archivedProjects.length > 5 && letters.size > 1;
   }, [archivedProjects]);
 
-  const getProjectTotalHours = (projectId: string) => shifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0);
+  const getProjectTotalHours = (projectId: string) => maybeRoundHours(
+    shifts.filter(s => s.projectId === projectId).reduce((acc, s) => acc + s.hours, 0),
+    roundTotalsToQuarterHours
+  );
 
   const handleEditClick = (_e: MouseEvent, project: Project) => {
     setProjectToEdit(project);
@@ -58,7 +61,7 @@ export default function ArchivePage() {
 
   const handleExportProjectToText = (project: Project) => {
     const projectShifts = getShiftsByProjectId(project.id);
-    const total = projectShifts.reduce((acc, s) => acc + s.hours, 0);
+    const total = maybeRoundHours(projectShifts.reduce((acc, s) => acc + s.hours, 0), roundTotalsToQuarterHours);
     let exportText = `${project.name}\n`;
     if (hourFormat === 'decimal') {
       exportText += `${total.toFixed(2)} Total Hours\n`;

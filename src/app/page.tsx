@@ -22,7 +22,7 @@ import {
 import { NewProjectDialog } from "@/components/NewProjectDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { Project, Shift } from "@/lib/types";
-import { formatHours, formatHoursForExport, formatShiftRange } from "@/lib/utils";
+import { formatHours, formatHoursForExport, formatShiftRange, maybeRoundHours } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import type { ProjectSortBy, SortDir } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,7 @@ import {
 
 export default function Home() {
   const { projects, shifts, deleteProject, archiveProject, unarchiveProject, getShiftsByProjectId } = useAppData();
-  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir, showTotalProjectHoursOnCards } = useSettings();
+  const { hourFormat, timeFormat, projectSortBy, projectSortDir, setProjectSortBy, setProjectSortDir, showTotalProjectHoursOnCards, roundTotalsToQuarterHours } = useSettings();
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
@@ -50,15 +50,17 @@ export default function Home() {
 
   // Unconsolidated (current) hours exclude shifts with a periodId (i.e., current period only)
   const getProjectCurrentHours = (projectId: string) => {
-    return shifts
+    const sum = shifts
       .filter((shift: Shift) => shift.projectId === projectId && !shift.periodId)
       .reduce((acc: number, shift: Shift) => acc + shift.hours, 0);
+    return maybeRoundHours(sum, roundTotalsToQuarterHours);
   };
   // Total project hours include all shifts (consolidated + current)
   const getProjectTotalHours = (projectId: string) => {
-    return shifts
+    const sum = shifts
       .filter((shift: Shift) => shift.projectId === projectId)
       .reduce((acc: number, shift: Shift) => acc + shift.hours, 0);
+    return maybeRoundHours(sum, roundTotalsToQuarterHours);
   };
   
   const activeProjects = projects.filter(p => !p.archived);
@@ -107,7 +109,7 @@ export default function Home() {
 
   const handleExportProjectToText = (project: Project) => {
     const projectShifts = getShiftsByProjectId(project.id);
-    const total = projectShifts.reduce((acc, s) => acc + s.hours, 0);
+  const total = maybeRoundHours(projectShifts.reduce((acc, s) => acc + s.hours, 0), roundTotalsToQuarterHours);
     let exportText = `${project.name}\n`;
     if (hourFormat === 'decimal') {
       exportText += `${total.toFixed(2)} Total Hours\n`;
