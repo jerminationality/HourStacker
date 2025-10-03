@@ -13,8 +13,27 @@ export function ServiceWorkerManager() {
   const version = process.env['NEXT_PUBLIC_SW_VERSION'] || String(Date.now());
       const swUrl = `/sw.js?v=${encodeURIComponent(version)}`;
       navigator.serviceWorker
-        .register(swUrl)
+        .register(swUrl, { updateViaCache: 'none' })
         .then((registration) => {
+          // Check for SW updates when the page becomes visible
+          const onVisibility = () => {
+            if (document.visibilityState === 'visible') {
+              try {
+                registration.update();
+              } catch (err) {
+                if (process.env.NODE_ENV !== 'production') {
+                  // Ignore update errors in dev; this is a best-effort check
+                  console.debug('Service Worker update check failed', err);
+                }
+              }
+            }
+          };
+          document.addEventListener('visibilitychange', onVisibility);
+
+          // Cleanup listener on unload/react teardown
+          window.addEventListener('unload', () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+          });
           // If there's an updated worker waiting, prompt the user to reload
           if (registration.waiting) {
             waitingWorkerRef.current = registration.waiting;
