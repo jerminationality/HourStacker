@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GoogleChromeLabs/bubblewrap/main/packages/cli/schema/twa-manifest.schema.json",
+  "packageId": "com.example.hourstacker",
+  "host": "example.com",
+  "name": "HourStacker",
+  "launcherName": "HourStacker",
+  "display": "standalone",
+  "themeColor": "#0f172a",
+  "navigationColor": "#0f172a",
+  "backgroundColor": "#ffffff",
+  "fullScopeUrl": "https://example.com/",
+  "startUrl": "/",
+  "iconUrl": "https://example.com/icon-512x512.png",
+  "maskableIconUrl": "https://example.com/icon-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "enableNotifications": false,
+  "orientation": "portrait",
+  "appVersionName": "0.9.0",
+  "appVersionCode": 9,
+  "shortcuts": [],
+  "signingKey": {
+    "path": "keystore.jks",
+    "alias": "hourstacker",
+    "fullPath": ""
+  },
+  "generatorApp": "bubblewrap-cli",
+  "alphaDependencies": false
+}
