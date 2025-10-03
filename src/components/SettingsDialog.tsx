@@ -84,7 +84,7 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <Label htmlFor="round-quarter" className="text-base">Round totals up to next 1/4 hour</Label>
-                            <p className="text-sm text-muted-foreground">Always rounds up. Applies to totals and exports; individual shift entries remain exact.</p>
+                            <p className="text-sm text-muted-foreground">Applies to totals and exports; individual shift entries remain exact.</p>
                         </div>
                         <Switch
                             id="round-quarter"
@@ -106,7 +106,7 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <Label htmlFor="show-total-proj-hours" className="text-base">Display total project hours on project cards</Label>
-                            <p className="text-sm text-muted-foreground">Show consolidated + current hours side by side.</p>
+                            <p className="text-sm text-muted-foreground">Show both current shift and entire project totals.</p>
                         </div>
                         <Switch
                             id="show-total-proj-hours"
