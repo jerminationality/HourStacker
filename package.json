@@ -11,7 +11,8 @@
     "lint:fix": "npm run lint -- --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "check": "npm run typecheck && npm run lint"
+    "check": "npm run typecheck && npm run lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
