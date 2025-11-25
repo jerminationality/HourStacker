@@ -10,8 +10,11 @@ export function ServiceWorkerManager() {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') return; // Avoid SW in dev to reduce stale chunk issues
     if ('serviceWorker' in navigator) {
-  const version = process.env['NEXT_PUBLIC_SW_VERSION'] || String(Date.now());
-      const swUrl = `/sw.js?v=${encodeURIComponent(version)}`;
+      const version = process.env['NEXT_PUBLIC_SW_VERSION'] || String(Date.now());
+      const swUrl = new URL(
+        `/sw.js?v=${encodeURIComponent(version)}`,
+        'https://hour-stacker.vercel.app/'
+      ).toString();
       navigator.serviceWorker
         .register(swUrl, { updateViaCache: 'none' })
         .then((registration) => {
