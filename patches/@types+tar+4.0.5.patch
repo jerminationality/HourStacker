@@ -1,0 +1,13 @@
+diff --git a/node_modules/@types/tar/index.d.ts b/node_modules/@types/tar/index.d.ts
+index abf31a0..1b33d1a 100644
+--- a/node_modules/@types/tar/index.d.ts
++++ b/node_modules/@types/tar/index.d.ts
+@@ -9,7 +9,7 @@
+ import stream = require('stream');
+ import events = require('events');
+ import zlib = require('zlib');
+-import MiniPass = require('minipass');
++import { Minipass as MiniPass } from 'minipass';
+ 
+ // #region Interfaces
+ 
