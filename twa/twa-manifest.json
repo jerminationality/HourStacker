@@ -15,8 +15,8 @@
   "splashScreenFadeOutDuration": 300,
   "enableNotifications": false,
   "orientation": "portrait",
-  "appVersionName": "0.9.0",
-  "appVersionCode": 9,
+  "appVersionName": "1.0.0",
+  "appVersionCode": 10,
   "shortcuts": [],
   "signingKey": {
     "path": "android-signing-key.keystore",

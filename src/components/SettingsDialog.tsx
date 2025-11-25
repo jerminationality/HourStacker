@@ -116,7 +116,7 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                     </div>
                     {/* Version label */}
                     <div className="flex justify-end">
-                        <span className="text-xs text-muted-foreground">Build version 0.9</span>
+                        <span className="text-xs text-muted-foreground">Build version 1.0</span>
                     </div>
                 </div>
             </DialogContent>

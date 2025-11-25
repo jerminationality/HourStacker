@@ -6,10 +6,18 @@ if (!(Test-Path android)) {
   exit 1
 }
 
-# Update the project from manifest (optional but recommended)
-npx --yes @bubblewrap/cli update
+# Run Bubblewrap commands from the android project directory so it can find twa-manifest.json
+Push-Location android
 
-# Build release bundle
-npx --yes @bubblewrap/cli build --release
+try {
+  # Update the project from manifest (optional but recommended)
+  npx --yes @bubblewrap/cli update
+
+  # Build release bundle
+  npx --yes @bubblewrap/cli build --release
+}
+finally {
+  Pop-Location
+}
 
 Write-Host "\nIf successful, your AAB should be at: android/app/build/outputs/bundle/release/app-release.aab"
