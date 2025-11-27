@@ -16,7 +16,7 @@
   "enableNotifications": false,
   "orientation": "portrait",
   "appVersionName": "1.0.0",
-  "appVersionCode": 10,
+  "appVersionCode": 11,
   "shortcuts": [],
   "signingKey": {
     "path": "android-signing-key.keystore",
