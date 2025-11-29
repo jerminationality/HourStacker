@@ -47,6 +47,7 @@ export default function Home() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   
   const { toast } = useToast();
+  const headerIconClasses = "text-foreground/80 hover:text-foreground transition-colors hover:bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 data-[state=open]:bg-transparent";
 
   // Unconsolidated (current) hours exclude shifts with a periodId (i.e., current period only)
   const getProjectCurrentHours = (projectId: string) => {
@@ -150,16 +151,21 @@ export default function Home() {
          <header className="p-4 sm:py-3 sm:px-6 border-b border-border/50 bg-card/50 sticky top-0 backdrop-blur-sm z-10">
                 <div className="max-w-[512px] w-full mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                        <Hourglass className="h-6 w-6 text-orange-500" />
+                        <Hourglass className="h-7 w-7 text-orange-500 translate-y-[1px]" />
                         <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-headline">HourStacker</h1>
                     </div>
                   <div className="flex items-center gap-1">
-                    <Button asChild variant="ghost" size="icon" aria-label="View archived">
+                    <Button asChild variant="ghost" size="icon" aria-label="View archived" className={headerIconClasses}>
                       <Link href="/archive"><Archive className="h-4 w-4" /></Link>
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Sort projects">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Sort projects"
+                          className={`${headerIconClasses} data-[state=open]:bg-accent data-[state=open]:text-white data-[state=open]:hover:bg-accent data-[state=open]:hover:text-white`}
+                        >
                           <ArrowUpDown className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -179,7 +185,7 @@ export default function Home() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-                      <Button variant="ghost" size="icon" onClick={() => setIsSettingsDialogOpen(true)}>
+                      <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                         <Settings className="h-4 w-4" />
                       </Button>
                     </SettingsDialog>
@@ -207,16 +213,21 @@ export default function Home() {
       <header className="p-4 sm:py-3 sm:px-6 border-b border-border/50 bg-card/50 sticky top-0 backdrop-blur-sm z-10">
   <div className="max-w-[512px] w-full mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
-                <Hourglass className="h-6 w-6 text-orange-500" />
+                <Hourglass className="h-6 w-6 text-orange-500 translate-y-[1px]" />
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-headline">HourStacker</h1>
             </div>
           <div className="flex items-center gap-1">
-            <Button asChild variant="ghost" size="icon" aria-label="View archived">
+            <Button asChild variant="ghost" size="icon" aria-label="View archived" className={headerIconClasses}>
               <Link href="/archive"><Archive className="h-4 w-4" /></Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Sort projects">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Sort projects"
+                  className={`${headerIconClasses} data-[state=open]:bg-accent data-[state=open]:text-white data-[state=open]:hover:bg-accent data-[state=open]:hover:text-white`}
+                >
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -236,7 +247,7 @@ export default function Home() {
               </DropdownMenuContent>
             </DropdownMenu>
             <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-              <Button variant="ghost" size="icon" onClick={() => setIsSettingsDialogOpen(true)}>
+              <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
               </Button>
             </SettingsDialog>

@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ReactNode } from "react";
 import { Separator } from "./ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SettingsDialogProps {
     children: ReactNode;
@@ -38,7 +39,8 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                         Customize the look and feel of the app.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-6 pt-4 pb-1">
+                <ScrollArea className="max-h-[70vh] pr-1 -mr-1">
+                <div className="grid gap-6 pt-4 pb-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
                         <Switch
@@ -116,9 +118,10 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                     </div>
                     {/* Version label */}
                     <div className="flex justify-end">
-                        <span className="text-xs text-muted-foreground">Build version 1.0</span>
+                        <span className="text-xs text-muted-foreground">Build version 1.1</span>
                     </div>
                 </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );

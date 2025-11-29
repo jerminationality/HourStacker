@@ -25,7 +25,9 @@ export default function ArchivePage() {
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const headerIconClasses = "text-foreground/80 hover:text-foreground transition-colors hover:bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 data-[state=open]:bg-transparent";
 
   const archivedProjects = useMemo(() => projects.filter(p => p.archived).sort((a, b) => a.name.localeCompare(b.name)), [projects]);
 
@@ -108,12 +110,17 @@ export default function ArchivePage() {
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-headline">HourStacker</h1>
           </div>
           <div className="flex items-center gap-1">
-            <Button asChild variant="ghost" size="icon" aria-label="Back to projects" className="bg-accent hover:bg-accent">
+            <Button asChild variant="ghost" size="icon" aria-label="Back to projects" className="bg-accent hover:bg-accent text-white focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0">
               <Link href="/"><Archive className="h-4 w-4 text-white" /></Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Sort projects">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Sort projects"
+                  className={`${headerIconClasses} data-[state=open]:bg-accent data-[state=open]:text-white data-[state=open]:hover:bg-accent data-[state=open]:hover:text-white`}
+                >
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -132,8 +139,8 @@ export default function ArchivePage() {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <SettingsDialog open={false} onOpenChange={() => {}}>
-              <Button variant="ghost" size="icon">
+            <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+              <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
               </Button>
             </SettingsDialog>

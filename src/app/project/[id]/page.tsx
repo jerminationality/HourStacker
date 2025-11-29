@@ -51,6 +51,7 @@ export default function ProjectPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const headerIconClasses = "text-foreground/80 hover:text-foreground transition-colors hover:bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 data-[state=open]:bg-transparent";
   const { timeFormat, hourFormat, confirmDeleteShift, setConfirmDeleteShift: setConfirmDelete, showTotalProjectHoursOnCards, roundTotalsToQuarterHours } = useSettings();
   const { 
   getProjectById, 
@@ -477,7 +478,7 @@ export default function ProjectPage() {
                           variant="ghost"
                           size="icon"
                           aria-label={activeShift ? 'Stop active shift' : 'Start shift'}
-                          className="h-8 w-8"
+                          className={`h-8 w-8 ${headerIconClasses}`}
                           onClick={() => {
                             const current = activeShift as ActiveShift | undefined;
                             if (current?.id) {
@@ -491,7 +492,7 @@ export default function ProjectPage() {
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                            <Button variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${headerIconClasses}`}>
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -592,7 +593,7 @@ export default function ProjectPage() {
                 variant="ghost"
                 size="icon"
                 aria-label={activeShift ? 'Stop active shift' : 'Start shift'}
-                className="h-8 w-8"
+                className={`h-8 w-8 ${headerIconClasses}`}
                 onClick={() => {
                   const current = activeShift as ActiveShift | undefined;
                   if (current?.id) {
@@ -606,7 +607,7 @@ export default function ProjectPage() {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${headerIconClasses}`}>
                       <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
