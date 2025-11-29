@@ -42,7 +42,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
                         Customize the look and feel of the app.
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh] pr-1 -mr-1">
+                <ScrollArea className="max-h-[calc(100vh-4px)] pr-1 -mr-1">
                 <div className="grid gap-6 pt-4 pb-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
