@@ -1,9 +1,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAppData } from "@/contexts/AppDataContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import tipArrow from "@/../TipArrow.png";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Home() {
   const { projects, shifts, deleteProject, archiveProject, unarchiveProject, getShiftsByProjectId } = useAppData();
@@ -45,9 +48,27 @@ export default function Home() {
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1);
+  const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding, onboardingStorageReady] = useLocalStorage<boolean>("hourstacker:onboarding-complete", false);
+  const fabButtonRef = useRef<HTMLButtonElement | null>(null);
   
+  useEffect(() => {
+    if (onboardingStorageReady && !hasCompletedOnboarding) {
+      setOnboardingStep(1);
+      setIsOnboardingVisible(true);
+    }
+  }, [onboardingStorageReady, hasCompletedOnboarding]);
+
+  const completeOnboarding = useCallback(() => {
+    setIsOnboardingVisible(false);
+    setHasCompletedOnboarding(true);
+    setOnboardingStep(1);
+  }, [setHasCompletedOnboarding]);
+
   const { toast } = useToast();
   const headerIconClasses = "text-foreground/80 hover:text-foreground transition-colors hover:bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 data-[state=open]:bg-transparent";
+  const shouldShowOnboarding = onboardingStorageReady && !hasCompletedOnboarding && isOnboardingVisible;
 
   // Unconsolidated (current) hours exclude shifts with a periodId (i.e., current period only)
   const getProjectCurrentHours = (projectId: string) => {
@@ -145,6 +166,80 @@ export default function Home() {
       .catch(() => toast({ title: "Failed to copy text", description: "Could not copy to clipboard.", variant: "destructive" }));
   };
 
+  const handleStartTutorial = useCallback(() => {
+    if (!onboardingStorageReady) return;
+    setIsSettingsDialogOpen(false);
+    setHasCompletedOnboarding(false);
+    setOnboardingStep(1);
+    setIsOnboardingVisible(true);
+  }, [onboardingStorageReady, setHasCompletedOnboarding, setIsSettingsDialogOpen, setOnboardingStep, setIsOnboardingVisible]);
+
+  const handleOnboardingOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (onboardingStep === 1) {
+      setOnboardingStep(2);
+      return;
+    }
+
+    const fabRect = fabButtonRef.current?.getBoundingClientRect();
+    const clickX = event.clientX;
+    const clickY = event.clientY;
+
+    if (fabRect && clickX >= fabRect.left && clickX <= fabRect.right && clickY >= fabRect.top && clickY <= fabRect.bottom) {
+      completeOnboarding();
+      handleDialogStateChange(true);
+      return;
+    }
+
+    completeOnboarding();
+  };
+
+  const onboardingOverlay = shouldShowOnboarding ? (
+    <div
+      role="dialog"
+      aria-live="polite"
+      aria-label="HourStacker onboarding tips"
+      className="fixed inset-0 z-50 flex justify-center"
+      onClick={handleOnboardingOverlayClick}
+    >
+      {onboardingStep === 1 && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-none" aria-hidden="true" />
+      )}
+      <div className="relative h-full w-full max-w-[512px] px-4">
+        {onboardingStep === 1 ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="max-w-sm w-full text-center px-6 py-5 bg-card/95 border border-primary/40 rounded-2xl shadow-2xl text-foreground">
+              <p className="text-xl font-semibold mb-2">Welcome to HourStacker</p>
+              <p className="text-base text-muted-foreground">
+                HourStacker consists of two main objects: Projects and the Shifts within.
+              </p>
+              <p className="mt-4 text-xs uppercase tracking-wide text-primary">Tap anywhere to continue</p>
+            </div>
+          </div>
+        ) : (
+          <div className="pointer-events-none absolute inset-0">
+            <div
+              className="absolute bottom-[2px] right-[6px] h-[188px] w-[20.664rem] rounded-2xl"
+              style={{ boxShadow: "0 0 0 9999px rgba(9, 9, 11, 0.78)" }}
+            >
+              <div className="absolute inset-0 rounded-2xl border border-white/35" aria-hidden="true" />
+              <div className="absolute inset-0 flex flex-col p-4">
+                <p className="text-lg font-semibold text-muted-foreground mt-7 -ml-1 tracking-wide text-center">Create a project to get started</p>
+                <div className="flex-1 flex items-center justify-center -mt-3">
+                  <Image
+                    src={tipArrow}
+                    alt="Pointer arrow toward the add button"
+                    className="w-16 rotate-2 select-none -translate-y-3 translate-x-12"
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   if (activeProjects.length === 0) {
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -184,7 +279,7 @@ export default function Home() {
                         </DropdownMenuRadioGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+                    <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} onStartTutorial={handleStartTutorial}>
                       <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                         <Settings className="h-4 w-4" />
                       </Button>
@@ -193,7 +288,7 @@ export default function Home() {
                 </div>
             </header>
       <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24 flex items-center justify-center">
-                 <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit}>
+                  <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit} triggerRef={fabButtonRef}>
                     <Button
                     size="icon"
                     className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
@@ -204,6 +299,7 @@ export default function Home() {
                 </NewProjectDialog>
   {/* Archive is a dedicated page now */}
             </main>
+          {onboardingOverlay}
         </div>
     )
   }
@@ -246,7 +342,7 @@ export default function Home() {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+            <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} onStartTutorial={handleStartTutorial}>
               <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
               </Button>
@@ -320,7 +416,7 @@ export default function Home() {
         </div>
       </main>
 
-      <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit}>
+      <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit} triggerRef={fabButtonRef}>
         <Button
           size="icon"
           className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
@@ -345,6 +441,7 @@ export default function Home() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+      {onboardingOverlay}
     </div>
   );
 }

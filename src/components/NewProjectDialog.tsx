@@ -23,7 +23,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, cloneElement, isValidElement } from "react";
+import type { ReactElement, RefObject } from "react";
 import { Project } from "@/lib/types";
 
 const formSchema = z.object({
@@ -35,9 +36,10 @@ interface NewProjectDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     projectToEdit?: Project | null;
+  triggerRef?: RefObject<HTMLButtonElement>;
 }
 
-export function NewProjectDialog({ children, open, onOpenChange, projectToEdit }: NewProjectDialogProps) {
+export function NewProjectDialog({ children, open, onOpenChange, projectToEdit, triggerRef }: NewProjectDialogProps) {
   const { addProject, updateProject } = useAppData();
   const isEditMode = !!projectToEdit;
 
@@ -70,9 +72,13 @@ export function NewProjectDialog({ children, open, onOpenChange, projectToEdit }
     onOpenChange(false);
   }
 
+  const triggerChild = triggerRef && isValidElement(children)
+    ? cloneElement(children as ReactElement, { ref: triggerRef })
+    : children;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>{triggerChild}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Edit Project" : "Create New Project"}</DialogTitle>

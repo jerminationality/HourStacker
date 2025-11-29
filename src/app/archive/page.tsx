@@ -17,6 +17,7 @@ import type { Project, Shift } from "@/lib/types";
 import { formatHours, formatHoursForExport, formatShiftRange, maybeRoundHours } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function ArchivePage() {
   const { projects, shifts, deleteProject, archiveProject, unarchiveProject, getShiftsByProjectId } = useAppData();
@@ -26,6 +27,7 @@ export default function ArchivePage() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [, setHasCompletedOnboarding, onboardingStorageReady] = useLocalStorage<boolean>("hourstacker:onboarding-complete", false);
   const { toast } = useToast();
   const headerIconClasses = "text-foreground/80 hover:text-foreground transition-colors hover:bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 data-[state=open]:bg-transparent";
 
@@ -101,6 +103,12 @@ export default function ArchivePage() {
     if (!open) setProjectToEdit(null);
   };
 
+  const handleStartTutorial = () => {
+    if (!onboardingStorageReady) return;
+    setIsSettingsDialogOpen(false);
+    setHasCompletedOnboarding(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="p-4 sm:py-3 sm:px-6 border-b border-border/50 bg-card/50 sticky top-0 backdrop-blur-sm z-10">
@@ -139,7 +147,7 @@ export default function ArchivePage() {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+            <SettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} onStartTutorial={handleStartTutorial}>
               <Button variant="ghost" size="icon" className={headerIconClasses} onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
               </Button>

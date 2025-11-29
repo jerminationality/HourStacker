@@ -3,7 +3,6 @@
 
 import { useTheme } from "next-themes";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +22,15 @@ interface SettingsDialogProps {
     children: ReactNode;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onStartTutorial?: () => void;
 }
 
-export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }: SettingsDialogProps) {
     const { theme, setTheme } = useTheme();
     const { timeFormat, setTimeFormat, hourFormat, setHourFormat, confirmDeleteShift, setConfirmDeleteShift, showTotalProjectHoursOnCards, setShowTotalProjectHoursOnCards, roundTotalsToQuarterHours, setRoundTotalsToQuarterHours } = useSettings();
+    const handleTutorialClick = () => {
+        onStartTutorial?.();
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,9 +119,16 @@ export function SettingsDialog({ children, open, onOpenChange }: SettingsDialogP
                             onCheckedChange={setShowTotalProjectHoursOnCards}
                         />
                     </div>
-                    {/* Version label */}
-                    <div className="flex justify-end">
-                        <span className="text-xs text-muted-foreground">Build version 1.1</span>
+                    {/* Version label + tutorial shortcut */}
+                    <div className="flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={handleTutorialClick}
+                            className="text-xs font-medium text-accent underline underline-offset-2 hover:text-accent/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/60"
+                        >
+                            Tutorial
+                        </button>
+                        <span className="text-xs text-muted-foreground">Build version 1.2</span>
                     </div>
                 </div>
                 </ScrollArea>
