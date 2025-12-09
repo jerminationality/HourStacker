@@ -50,3 +50,8 @@ download.zip
 HourStacker.git.bare/
 OpenJDK21U-jdk_x64_windows_hotspot_21.0.8_9.msi
 *.zip
+
+# android build outputs
+android/.gradle/
+android/app/build/
+android/build/
