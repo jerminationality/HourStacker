@@ -37,7 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import tipArrow from "@/../TipArrow.png";
+import tipArrow from "../../TipArrow.png";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Home() {
