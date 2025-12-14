@@ -37,7 +37,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import tipArrow from "../../TipArrow.png";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Home() {
@@ -226,8 +225,10 @@ export default function Home() {
                 <p className="text-lg font-semibold text-muted-foreground mt-7 -ml-1 tracking-wide text-center">Create a project to get started</p>
                 <div className="flex-1 flex items-center justify-center -mt-3">
                   <Image
-                    src={tipArrow}
+                    src="/TipArrow.png"
                     alt="Pointer arrow toward the add button"
+                    width={128}
+                    height={128}
                     className="w-16 rotate-2 select-none -translate-y-3 translate-x-12"
                     draggable={false}
                   />
