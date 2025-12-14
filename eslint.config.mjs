@@ -17,6 +17,7 @@ export default [
       '**/dist/**',
       '**/build/**',
       '**/.turbo/**',
+      'next-env.d.ts',
     ],
   },
   js.configs.recommended,

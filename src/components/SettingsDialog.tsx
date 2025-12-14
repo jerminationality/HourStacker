@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
   Dialog,
