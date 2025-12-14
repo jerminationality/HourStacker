@@ -289,8 +289,9 @@ export default function Home() {
                 </div>
             </header>
       <main className="flex-1 w-full max-w-[512px] mx-auto p-4 sm:p-6 pb-24 flex items-center justify-center">
-                  <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit} triggerRef={fabButtonRef}>
+                  <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit}>
                     <Button
+                    ref={fabButtonRef}
                     size="icon"
                     className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
                     onClick={() => handleDialogStateChange(true)}
@@ -417,8 +418,9 @@ export default function Home() {
         </div>
       </main>
 
-      <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit} triggerRef={fabButtonRef}>
+      <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={handleDialogStateChange} projectToEdit={projectToEdit}>
         <Button
+          ref={fabButtonRef}
           size="icon"
           className="fab-inset h-14 w-14 rounded-full shadow-lg z-20"
           onClick={() => handleDialogStateChange(true)}
