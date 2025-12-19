@@ -52,7 +52,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+            <DialogContent className="sm:max-w-[425px] p-4 sm:p-6">
                 <DialogHeader className="pb-2 sm:pb-3">
                     <DialogTitle className="text-base sm:text-lg">Settings</DialogTitle>
                     <DialogDescription className="text-xs sm:text-sm">
