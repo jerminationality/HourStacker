@@ -1,5 +1,7 @@
-import { parseISO } from 'date-fns';
+import { parse } from 'date-fns';
 import type { Shift } from '@/lib/types';
+
+const DATE_ONLY_FORMAT = 'yyyy-MM-dd';
 
 // Build start and end Date objects from a base date (date only) and HH:mm times.
 // If end time is less than or equal to start time, we treat it as crossing midnight (next day).
@@ -21,7 +23,7 @@ export function buildDateRange(baseDate: Date, startTime: string, endTime: strin
 }
 
 export function buildDateRangeFromShift(shift: Shift) {
-  const date = parseISO(shift.date); // shift.date stored as yyyy-MM-dd
+  const date = parse(shift.date, DATE_ONLY_FORMAT, new Date());
   return buildDateRange(date, shift.startTime, shift.endTime);
 }
 

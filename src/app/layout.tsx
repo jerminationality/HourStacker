@@ -61,6 +61,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   <style>{`:root,body,html{touch-action:manipulation;overscroll-behavior:contain}`}</style>
       </head>
   <body className="font-body antialiased bg-[#1F1F1F] text-foreground">
+        <style dangerouslySetInnerHTML={{__html: `
+          .rdp-root { position: relative; box-sizing: border-box; }
+          .rdp-root * { box-sizing: border-box; }
+          .rdp-day { width: 44px; height: 44px; text-align: center; }
+          .rdp-day_button { background: none; padding: 0; margin: 0; cursor: pointer !important; font: inherit; color: inherit; justify-content: center; align-items: center; display: flex; width: 42px; height: 42px; border: 2px solid transparent; border-radius: 100%; }
+          .rdp-day_button:disabled { cursor: revert; }
+          .rdp-button_next, .rdp-button_previous { border: none; background: none; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; display: inline-flex; align-items: center; justify-content: center; position: relative; appearance: none; width: 2.25rem; height: 2.25rem; }
+          .rdp-month_caption { display: flex; align-content: center; height: 2.75rem; font-weight: bold; font-size: large; }
+          .rdp-months { position: relative; display: flex; flex-wrap: wrap; gap: 2rem; max-width: fit-content; }
+          .rdp-month_grid { border-collapse: collapse; }
+          .rdp-nav { position: absolute; top: 0; right: 0; display: flex; align-items: center; height: 2.75rem; }
+          .rdp-weekday { opacity: 0.75; padding: 0.5rem 0; font-weight: 500; font-size: smaller; text-align: center; }
+          .rdp-focusable { cursor: pointer !important; }
+        `}} />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

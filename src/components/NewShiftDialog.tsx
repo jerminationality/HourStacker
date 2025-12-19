@@ -4,7 +4,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format, differenceInMinutes, parseISO } from "date-fns";
+import { format, differenceInMinutes, parse } from "date-fns";
 
 import { useAppData } from "@/contexts/AppDataContext";
 import { Button } from "@/components/ui/button";
@@ -123,8 +123,8 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
   // Stable "today" captured once per component instance (server & client match) using date-only string
   const todayYMD = useMemo(() => {
     const now = new Date();
-    // Use UTC normalization to avoid timezone shifting the date textual representation
-    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    // Normalize to the user's local midnight so displayed dates stay in sync
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }, []);
 
   const isMounted = useIsMounted();
@@ -142,7 +142,7 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
   useEffect(() => {
     if (isEditMode && shiftToEdit) {
       form.reset({
-        date: parseISO(shiftToEdit.date),
+        date: parse(shiftToEdit.date, 'yyyy-MM-dd', new Date()),
         startTime: shiftToEdit.startTime,
         endTime: shiftToEdit.endTime,
         description: shiftToEdit.description || "",
@@ -155,7 +155,7 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
         description: "",
       });
     }
-  }, [shiftToEdit, open, form, isEditMode]);
+  }, [shiftToEdit, open, form, isEditMode, todayYMD]);
 
 
   // Preview removed per request
@@ -221,21 +221,54 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
                                         </Button>
                                     </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={field.value}
-                                      onSelect={(date) => {
-                                          field.onChange(date);
-                                          setIsCalendarOpen(false);
-                                      }}
-                                      disabled={(date) => {
-                                        // Compare against captured today if not mounted (server & first client render consistent)
-                                        const nowRef = isMounted ? new Date() : todayYMD;
-                                        return date > nowRef || date < new Date("1900-01-01");
-                                      }}
-                                      initialFocus
-                                    />
+                                <PopoverContent 
+                                  className="w-auto p-0" 
+                                  align="start"
+                                  onOpenAutoFocus={(e) => e.preventDefault()}
+                                >
+                                    <div 
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ cursor: 'default', userSelect: 'none' }}
+                                    >
+                                      <style dangerouslySetInnerHTML={{__html: `
+                                        .rdp-day_button { 
+                                          cursor: pointer !important; 
+                                          pointer-events: auto !important;
+                                          user-select: none !important;
+                                        }
+                                        .rdp-day_button:hover {
+                                          cursor: pointer !important;
+                                        }
+                                        .rdp-button_previous,
+                                        .rdp-button_next {
+                                          cursor: pointer !important;
+                                          pointer-events: auto !important;
+                                          user-select: none !important;
+                                        }
+                                        .rdp-button_previous:hover,
+                                        .rdp-button_next:hover {
+                                          cursor: pointer !important;
+                                        }
+                                        * {
+                                          user-select: none !important;
+                                        }
+                                      `}} />
+                                      <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={(date) => {
+                                            if (date) {
+                                              field.onChange(date);
+                                              setIsCalendarOpen(false);
+                                            }
+                                        }}
+                                        disabled={(date) => {
+                                          const today = new Date();
+                                          today.setHours(23, 59, 59, 999);
+                                          return date > today || date < new Date("1900-01-01");
+                                        }}
+                                      />
+                                    </div>
                                 </PopoverContent>
                             </Popover>
                             <FormMessage />
