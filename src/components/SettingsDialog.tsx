@@ -147,7 +147,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
                         >
                             Tutorial
                         </button>
-                        <span className="text-xs text-muted-foreground">Build version 1.2</span>
+                        <span className="text-xs text-muted-foreground">Build version 1.3</span>
                     </div>
                 </div>
             </DialogContent>
