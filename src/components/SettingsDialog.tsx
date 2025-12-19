@@ -102,7 +102,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
                     </div>
                      <Separator className="my-1" />
                     {/* Rounding first among boolean toggles */}
-                    <div className="flex items-center justify-between gap-2 mb-2 sm:mb-5">
+                    <div className="flex items-center justify-between gap-2 mb-1 sm:mb-3">
                         <div className="space-y-0.5">
                             <Label htmlFor="round-quarter" className="text-sm sm:text-base leading-tight">Round totals up to next 1/4 hour</Label>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Applies to totals and exports; individual shift entries remain exact.</p>
@@ -114,7 +114,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
                             className="flex-shrink-0"
                         />
                     </div>
-                    <div className="flex items-center justify-between gap-2 mb-2 sm:mb-5">
+                    <div className="flex items-center justify-between gap-2 mb-1 sm:mb-3">
                         <div className="space-y-0.5">
                             <Label htmlFor="confirm-delete" className="text-sm sm:text-base leading-tight">Confirm Shift Deletion</Label>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Show a confirmation dialog before deleting a single shift.</p>
@@ -126,7 +126,7 @@ export function SettingsDialog({ children, open, onOpenChange, onStartTutorial }
                             className="flex-shrink-0"
                         />
                     </div>
-                    <div className="flex items-center justify-between gap-2 mb-2 sm:mb-5">
+                    <div className="flex items-center justify-between gap-2 mb-1 sm:mb-3">
                         <div className="space-y-0.5">
                             <Label htmlFor="show-total-proj-hours" className="text-sm sm:text-base leading-tight">Display total project hours on project cards</Label>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Show both current shift and entire project totals.</p>
