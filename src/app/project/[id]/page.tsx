@@ -94,21 +94,6 @@ export default function ProjectPage() {
   const activeShift = getActiveShift(projectId);
   const isHeader = useContext(HeaderContext);
 
-  // Handle browser back button to navigate to home
-  useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
-      // Only handle if we're not in a dialog
-      if (!isShiftDialogOpen && !isProjectDialogOpen && !isAlertOpen && !isProjectDeleteAlertOpen) {
-        e.preventDefault();
-        router.push('/');
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [router, isShiftDialogOpen, isProjectDialogOpen, isAlertOpen, isProjectDeleteAlertOpen]);
-
   // Listen for active shift start edit events dispatched by ActiveShiftCard
   useEffect(() => {
     const handler = (e: Event) => {
