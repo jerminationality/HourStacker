@@ -26,7 +26,6 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
   }, [key]);
 
   const setValue = useCallback((value: T | ((val: T) => T)) => {
-    if (!isInitialized) return;
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
@@ -40,7 +39,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
     } catch (error) {
       console.error(`Error setting localStorage key “${key}”:`, error);
     }
-  }, [key, storedValue, isInitialized]);
+  }, [key, storedValue]);
 
-  return [isInitialized ? storedValue : initialValue, setValue, isInitialized];
+  return [storedValue, setValue, isInitialized];
 }
