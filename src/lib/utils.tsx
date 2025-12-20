@@ -34,10 +34,10 @@ export function formatHours(hours: number, format: 'decimal' | 'hhmm' | 'both', 
   if (h > 0) {
     descriptiveFormat += `${h} ${h > 1 ? 'hours' : 'hour'}`;
     if (m > 0) {
-      descriptiveFormat += `, ${m} ${m > 1 ? 'minutes' : 'minute'}`;
+      descriptiveFormat += `, ${m} ${m === 1 ? 'minute' : 'minutes'}`;
     }
   } else {
-    descriptiveFormat = `${m} ${m > 1 ? 'minutes' : 'minute'}`;
+    descriptiveFormat = `${m} ${m === 1 ? 'minute' : 'minutes'}`;
   }
 
   if (format === 'hhmm') {
@@ -77,10 +77,10 @@ export function formatHoursForExport(hours: number, indent: number = 0, singleLi
     if (h > 0) {
         descriptiveFormat += `${h} ${h > 1 ? 'hours' : 'hour'}`;
         if (m > 0) {
-            descriptiveFormat += `, ${m} ${m > 1 ? 'minutes' : 'minute'}`;
+          descriptiveFormat += `, ${m} ${m === 1 ? 'minute' : 'minutes'}`;
         }
     } else {
-        descriptiveFormat = `${m} ${m > 1 ? 'minutes' : 'minute'}`;
+        descriptiveFormat = `${m} ${m === 1 ? 'minute' : 'minutes'}`;
     }
     
     if (singleLine) {
