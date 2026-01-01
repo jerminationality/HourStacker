@@ -2,7 +2,7 @@
 // Enhanced service worker with versioned precache + runtime caching strategies
 // Adjust VERSION on releases to force a new precache.
 // Bump VERSION when changing caching logic so clients fetch a fresh SW.
-const VERSION = 'v6';
+const VERSION = 'v7';
 const PRECACHE = `hour-stacker-precache-${VERSION}`;
 const RUNTIME = 'hour-stacker-runtime';
 
@@ -24,18 +24,24 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches and remove offline.html from all caches
 self.addEventListener('activate', (event) => {
   const currentCaches = [PRECACHE, RUNTIME];
   event.waitUntil(
     caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cacheName) => {
+      Promise.all([
+        // Delete old cache versions
+        ...cacheNames.map((cacheName) => {
           if (!currentCaches.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         }),
-      ),
+        // Remove offline.html from all remaining caches
+        ...cacheNames.map(async (cacheName) => {
+          const cache = await caches.open(cacheName);
+          return cache.delete('/offline.html');
+        })
+      ]),
     ).then(() => self.clients.claim()),
   );
 });
