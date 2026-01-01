@@ -64,11 +64,6 @@ const createFormSchema = (otherShifts: Shift[], projectId: string, activeShift: 
     }
     const { start: newStart, end: newEnd } = range;
 
-    // If editing and unchanged times (and same date) skip further overlap checks
-    if (editingShift && editingShift.date === format(data.date, 'yyyy-MM-dd') && editingShift.startTime === data.startTime && editingShift.endTime === data.endTime) {
-      return;
-    }
-
   const now = new Date();
   if (newEnd > now) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'End time cannot be in the future.', path: ['endTime'] });
@@ -115,8 +110,17 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const otherShifts = useMemo(
-    () => allShifts.filter(s => s.projectId === projectId && (!shiftToEdit || s.id !== shiftToEdit.id)),
-    [allShifts, projectId, shiftToEdit]
+    () => {
+      const filtered = allShifts.filter(s => {
+        // Always exclude shifts from other projects
+        if (s.projectId !== projectId) return false;
+        // When editing, exclude the shift being edited by ID comparison
+        if (shiftToEdit && shiftToEdit.id && s.id === shiftToEdit.id) return false;
+        return true;
+      });
+      return filtered;
+    },
+    [allShifts, projectId, shiftToEdit?.id]
   );
   const formSchema = useMemo(() => createFormSchema(otherShifts, projectId, activeShift, shiftToEdit), [otherShifts, projectId, activeShift, shiftToEdit]);
 

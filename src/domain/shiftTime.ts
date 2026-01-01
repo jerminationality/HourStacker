@@ -4,7 +4,7 @@ import type { Shift } from '@/lib/types';
 const DATE_ONLY_FORMAT = 'yyyy-MM-dd';
 
 // Build start and end Date objects from a base date (date only) and HH:mm times.
-// If end time is less than or equal to start time, we treat it as crossing midnight (next day).
+// If end time is less than start time, we treat it as crossing midnight (next day).
 export function buildDateRange(baseDate: Date, startTime: string, endTime: string) {
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = endTime.split(':').map(Number);
@@ -15,7 +15,7 @@ export function buildDateRange(baseDate: Date, startTime: string, endTime: strin
   start.setHours(sh ?? 0, sm ?? 0, 0, 0);
   const end = new Date(baseDate);
   end.setHours(eh ?? 0, em ?? 0, 0, 0);
-  if (end <= start) {
+  if (end < start) {
     // Overnight shift – add one day to end
     end.setDate(end.getDate() + 1);
   }
