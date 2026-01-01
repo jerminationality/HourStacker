@@ -115,8 +115,8 @@ export function NewShiftDialog({ children, projectId, open, onOpenChange, shiftT
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const otherShifts = useMemo(
-    () => allShifts.filter(s => s.projectId === projectId && s.id !== (shiftToEdit?.id || '')),
-    [allShifts, projectId, shiftToEdit?.id]
+    () => allShifts.filter(s => s.projectId === projectId && (!shiftToEdit || s.id !== shiftToEdit.id)),
+    [allShifts, projectId, shiftToEdit]
   );
   const formSchema = useMemo(() => createFormSchema(otherShifts, projectId, activeShift, shiftToEdit), [otherShifts, projectId, activeShift, shiftToEdit]);
 

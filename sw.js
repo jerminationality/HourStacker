@@ -2,7 +2,7 @@
 // Enhanced service worker with versioned precache + runtime caching strategies
 // Adjust VERSION on releases to force a new precache.
 // Bump VERSION when changing caching logic so clients fetch a fresh SW.
-const VERSION = 'v4';
+const VERSION = 'v6';
 const PRECACHE = `hour-stacker-precache-${VERSION}`;
 const RUNTIME = 'hour-stacker-runtime';
 
@@ -12,7 +12,6 @@ const PRECACHE_URLS = [
   '/favicon.ico',
   '/icon-192x192.png',
   '/icon-512x512.png',
-  '/offline.html',
 ];
 
 // Install: prefetch and cache core assets
@@ -89,13 +88,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // App shell documents: always network; only fallback offline on failure (no caching to avoid stale hashed asset refs)
+  // App shell documents: network-first with cache fallback (no offline page needed - app is fully offline-capable)
   if (request.destination === 'document') {
     event.respondWith((async () => {
       try {
-        return await fetch(request);
+        const response = await fetch(request);
+        // Cache successful responses for offline use
+        if (response && response.status === 200) {
+          const cache = await caches.open(RUNTIME);
+          cache.put(request, response.clone());
+        }
+        return response;
       } catch {
-        return caches.match('/offline.html');
+        // Serve from cache when offline - app works completely offline
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        // If no cache, try root page as fallback
+        const root = await caches.match('/');
+        if (root) return root;
+        // Last resort: return a minimal error (shouldn't happen after first visit)
+        return new Response('App unavailable. Please reload when online.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain' }
+        });
       }
     })());
     return;
