@@ -314,7 +314,27 @@ export default function ProjectPage() {
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> {format(parseISO(groupName), "dd/MM/yyyy")}
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-[13px] text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                  {hourFormat === 'decimal' ? (
+                    <span className="text-[13px] text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                  ) : (
+                    <span className="text-[13px] text-muted-foreground">
+                      {(() => {
+                        const totalMinutes = Math.round(dayTotal * 60);
+                        const h = Math.floor(totalMinutes / 60);
+                        const m = totalMinutes % 60;
+                        if (hourFormat === 'hhmm') {
+                          return `${h}:${m.toString().padStart(2, '0')}`;
+                        }
+                        // both
+                        return (
+                          <>
+                            <span className="font-semibold">{dayTotal.toFixed(2)}</span>
+                            <span className="font-normal"> ({h}:{m.toString().padStart(2, '0')})</span>
+                          </>
+                        );
+                      })()}
+                    </span>
+                  )}
                   {groupShifts.length > 1 && (
                     <Button
                       variant="ghost"
@@ -376,7 +396,27 @@ export default function ProjectPage() {
                 <Calendar className="h-5 w-5 text-muted-foreground" /> {format(parseISO(groupName), "PPP")}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                {hourFormat === 'decimal' ? (
+                  <span className="text-lg text-muted-foreground">{dayTotal.toFixed(2)}</span>
+                ) : (
+                  <span className="text-lg text-muted-foreground">
+                    {(() => {
+                      const totalMinutes = Math.round(dayTotal * 60);
+                      const h = Math.floor(totalMinutes / 60);
+                      const m = totalMinutes % 60;
+                      if (hourFormat === 'hhmm') {
+                        return `${h}:${m.toString().padStart(2, '0')}`;
+                      }
+                      // both
+                      return (
+                        <>
+                          <span className="font-semibold">{dayTotal.toFixed(2)}</span>
+                          <span className="font-normal"> ({h}:{m.toString().padStart(2, '0')})</span>
+                        </>
+                      );
+                    })()}
+                  </span>
+                )}
                 {groupShifts.length > 1 && (
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => handleDeleteGroupClick(groupName)}>
                     <Trash2 className="h-4 w-4" />

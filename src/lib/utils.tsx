@@ -30,25 +30,18 @@ export function formatHours(hours: number, format: 'decimal' | 'hhmm' | 'both', 
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
 
-  let descriptiveFormat = '';
-  if (h > 0) {
-    descriptiveFormat += `${h} ${h > 1 ? 'hours' : 'hour'}`;
-    if (m > 0) {
-      descriptiveFormat += `, ${m} ${m === 1 ? 'minute' : 'minutes'}`;
-    }
-  } else {
-    descriptiveFormat = `${m} ${m === 1 ? 'minute' : 'minutes'}`;
-  }
+  // HH:MM format
+  const hhmmFormat = `${h}:${m.toString().padStart(2, '0')}`;
 
   if (format === 'hhmm') {
-    return <span className={sizeClass}>{descriptiveFormat}</span>;
+    return <span className={sizeClass}>{hhmmFormat}</span>;
   }
   
-  // 'both'
+  // 'both' - decimal bold, HH:MM regular weight in parentheses
   return (
     <>
       <span className={sizeClass}>{hours.toFixed(2)}</span>
-      <span className={`${smallSizeClass} font-normal text-muted-foreground`}> ({descriptiveFormat})</span>
+      <span className={`${sizeClass} font-normal text-muted-foreground`}> ({hhmmFormat})</span>
     </>
   );
 }
