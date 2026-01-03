@@ -214,6 +214,7 @@ export default function ProjectPage() {
   const monthCount = shiftsGroupedByMonth.length;
   
   // Calculate the default accordion value only once on mount/when months change
+  // Using monthCount as dependency to avoid recalculation when array reference changes
   const initialAccordionValue = useMemo(() => {
     // Get current month in yyyy-MM format
     const currentMonth = format(new Date(), 'yyyy-MM');
@@ -228,7 +229,7 @@ export default function ProjectPage() {
       const last = shiftsGroupedByMonth[shiftsGroupedByMonth.length - 1];
       return last ? [last[0]] : [];
     }
-  }, [monthCount]);
+  }, [monthCount, shiftsGroupedByMonth]);
   
   const totalHours = useMemo(() => {
     const sum = viewedShifts.reduce((acc, shift) => acc + shift.hours, 0);
@@ -252,6 +253,7 @@ export default function ProjectPage() {
   }, [activeShift]);
 
   // Scroll to current month accordion when page loads
+  // Don't scroll if there's an active shift, as the page will auto-scroll to bottom for active shifts
   useEffect(() => {
     if (initialAccordionValue.length > 0 && currentMonthRef.current && !activeShift) {
       const id = window.setTimeout(() => {
