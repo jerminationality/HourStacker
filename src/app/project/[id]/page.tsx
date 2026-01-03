@@ -45,7 +45,6 @@ export default function ProjectPage() {
   const [periodToDelete, setPeriodToDelete] = useState<Period | null>(null);
   const [isProjectDeleteAlertOpen, setIsProjectDeleteAlertOpen] = useState(false);
   const [dontAskAgain, setDontAskAgain] = useState(false);
-  const [defaultAccordionValue, setDefaultAccordionValue] = useState<string[]>([]);
   const currentMonthRef = useRef<HTMLDivElement>(null);
   // No one-time tooltip needed when periods render inline
 
@@ -213,7 +212,9 @@ export default function ProjectPage() {
   }, [viewedShifts]);
 
   const monthCount = shiftsGroupedByMonth.length;
-  useEffect(() => {
+  
+  // Calculate the default accordion value only once on mount/when months change
+  const initialAccordionValue = useMemo(() => {
     // Get current month in yyyy-MM format
     const currentMonth = format(new Date(), 'yyyy-MM');
     
@@ -221,13 +222,11 @@ export default function ProjectPage() {
     const currentMonthExists = shiftsGroupedByMonth.find(([month]) => month === currentMonth);
     
     if (currentMonthExists) {
-      setDefaultAccordionValue([currentMonth]);
+      return [currentMonth];
     } else {
       // Fallback to last month if current month doesn't have shifts
       const last = shiftsGroupedByMonth[shiftsGroupedByMonth.length - 1];
-      if (last) {
-        setDefaultAccordionValue([last[0]]);
-      }
+      return last ? [last[0]] : [];
     }
   }, [monthCount]);
   
@@ -254,13 +253,13 @@ export default function ProjectPage() {
 
   // Scroll to current month accordion when page loads
   useEffect(() => {
-    if (defaultAccordionValue.length > 0 && currentMonthRef.current && !activeShift) {
+    if (initialAccordionValue.length > 0 && currentMonthRef.current && !activeShift) {
       const id = window.setTimeout(() => {
         currentMonthRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return () => window.clearTimeout(id);
     }
-  }, [defaultAccordionValue, activeShift]);
+  }, [initialAccordionValue, activeShift]);
 
   const handleExportToText = () => {
     if (!project) return;
@@ -887,9 +886,9 @@ export default function ProjectPage() {
                   <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
                 )}
                 {shiftsGroupedByMonth.length > 1 ? (
-                  <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
+                  <Accordion type="multiple" defaultValue={initialAccordionValue} className="w-full space-y-4">
                     {shiftsGroupedByMonth.map(([month, dayGroups]) => {
-                      const isCurrentMonth = defaultAccordionValue.includes(month);
+                      const isCurrentMonth = initialAccordionValue.includes(month);
                       return (
                         <AccordionItem 
                           value={month} 
