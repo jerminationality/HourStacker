@@ -45,7 +45,7 @@ export default function ProjectPage() {
   const [periodToDelete, setPeriodToDelete] = useState<Period | null>(null);
   const [isProjectDeleteAlertOpen, setIsProjectDeleteAlertOpen] = useState(false);
   const [dontAskAgain, setDontAskAgain] = useState(false);
-  const [defaultAccordionValue, setDefaultAccordionValue] = useState<string[]>([]);
+  const currentMonthRef = useRef<HTMLDivElement>(null);
   // No one-time tooltip needed when periods render inline
 
   const router = useRouter();
@@ -212,12 +212,24 @@ export default function ProjectPage() {
   }, [viewedShifts]);
 
   const monthCount = shiftsGroupedByMonth.length;
-  useEffect(() => {
-    const last = shiftsGroupedByMonth[shiftsGroupedByMonth.length - 1];
-    if (last) {
-      setDefaultAccordionValue([last[0]]);
+  
+  // Calculate the default accordion value only once on mount/when months change
+  // Using monthCount as dependency to avoid recalculation when array reference changes
+  const initialAccordionValue = useMemo(() => {
+    // Get current month in yyyy-MM format
+    const currentMonth = format(new Date(), 'yyyy-MM');
+    
+    // Find if current month exists in the shifts
+    const currentMonthExists = shiftsGroupedByMonth.find(([month]) => month === currentMonth);
+    
+    if (currentMonthExists) {
+      return [currentMonth];
+    } else {
+      // Fallback to last month if current month doesn't have shifts
+      const last = shiftsGroupedByMonth[shiftsGroupedByMonth.length - 1];
+      return last ? [last[0]] : [];
     }
-  }, [monthCount]);
+  }, [monthCount, shiftsGroupedByMonth]);
   
   const totalHours = useMemo(() => {
     const sum = viewedShifts.reduce((acc, shift) => acc + shift.hours, 0);
@@ -239,6 +251,17 @@ export default function ProjectPage() {
       return () => window.clearTimeout(id);
     }
   }, [activeShift]);
+
+  // Scroll to current month accordion when page loads
+  // Don't scroll if there's an active shift, as the page will auto-scroll to bottom for active shifts
+  useEffect(() => {
+    if (initialAccordionValue.length > 0 && currentMonthRef.current && !activeShift) {
+      const id = window.setTimeout(() => {
+        currentMonthRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => window.clearTimeout(id);
+    }
+  }, [initialAccordionValue, activeShift]);
 
   const handleExportToText = () => {
     if (!project) return;
@@ -865,17 +888,25 @@ export default function ProjectPage() {
                   <h2 className="text-sm font-semibold text-center text-muted-foreground py-0">Current Shifts</h2>
                 )}
                 {shiftsGroupedByMonth.length > 1 ? (
-                  <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full space-y-4">
-                    {shiftsGroupedByMonth.map(([month, dayGroups]) => (
-                      <AccordionItem value={month} key={month} className="border-none">
-                        <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
-                          {format(parseISO(month), "MMMM yyyy")}
-                        </AccordionTrigger>
-                        <AccordionContent className="!pt-4 space-y-4">
-                          {renderShiftGroups(dayGroups)}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
+                  <Accordion type="multiple" defaultValue={initialAccordionValue} className="w-full space-y-4">
+                    {shiftsGroupedByMonth.map(([month, dayGroups]) => {
+                      const isCurrentMonth = initialAccordionValue.includes(month);
+                      return (
+                        <AccordionItem 
+                          value={month} 
+                          key={month} 
+                          className="border-none"
+                          ref={isCurrentMonth ? currentMonthRef : null}
+                        >
+                          <AccordionTrigger className="text-xl font-bold font-headline text-foreground hover:no-underline -mb-2">
+                            {format(parseISO(month), "MMMM yyyy")}
+                          </AccordionTrigger>
+                          <AccordionContent className="!pt-4 space-y-4">
+                            {renderShiftGroups(dayGroups)}
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
                   </Accordion>
                 ) : (
                   <div className="space-y-4">
